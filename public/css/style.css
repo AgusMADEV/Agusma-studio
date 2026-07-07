@@ -124,7 +124,10 @@ button {
 .hero {
   min-height: calc(100vh - var(--header-height));
   display: grid;
-  background: url('../assets/images/hero-bg.png') center/cover no-repeat;
+  background-image: linear-gradient(to right, rgba(250, 249, 246, 1) 0%, rgba(250, 249, 246, 1) 35%, rgba(255, 255, 255, 0) 50%), url('../assets/images/hero-bg.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
   grid-template-columns: 0.9fr 1.1fr;
   border-bottom: 1px solid var(--color-border);
 }
