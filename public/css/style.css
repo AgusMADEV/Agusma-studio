@@ -35,8 +35,7 @@ button {
   z-index: 50;
 
   width: var(--sidebar-width);
-  border-right: 1px solid var(--color-border);
-  background: rgba(250, 249, 246, 0.92);
+  background: #f8f4f0;
   backdrop-filter: blur(18px);
 
   display: flex;
@@ -48,9 +47,13 @@ button {
 }
 
 .sidebar__monogram {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  letter-spacing: -0.08em;
+  width: 34px;
+}
+
+.sidebar__monogram img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .sidebar__text {
@@ -61,10 +64,20 @@ button {
   color: var(--color-muted);
 }
 
+.sidebar__divider {
+  width: 1px;
+  height: 72px;
+  background: var(--color-border);
+}
+
 .sidebar__signature {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 22px;
+  width: 40px;
+}
+
+.sidebar__signature img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* HEADER */
@@ -125,10 +138,10 @@ button {
   min-height: 100vh;
   padding-top: var(--header-height);
   display: grid;
-  background-image: linear-gradient(to right, rgba(250, 249, 246, 1) 0%, rgba(250, 249, 246, 1) 35%, rgba(255, 255, 255, 0) 50%), url('../assets/images/hero-bg2.png');
+  background-image: linear-gradient(to right, rgba(250, 249, 246, 1) 0%, rgba(250, 249, 246, 1) 20%, rgba(255, 255, 255, 0) 50%), url('../assets/images/hero-bg3b.svg');
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center top;
+  background-position: right center;
   grid-template-columns: 0.9fr 1.1fr;
   border-bottom: 1px solid var(--color-border);
 }
@@ -151,9 +164,8 @@ button {
 .hero__title {
   font-family: var(--font-serif);
   font-size: clamp(58px, 7vw, 112px);
-  line-height: 0.92;
-  font-weight: 400;
-  letter-spacing: -0.06em;
+  line-height: 1;
+  font-weight: 300;
 }
 
 .hero__description {
