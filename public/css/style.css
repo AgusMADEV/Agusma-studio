@@ -43,11 +43,11 @@ button {
   justify-content: space-between;
   flex-direction: column;
 
-  padding: 28px 0;
+  padding: 85px 0;
 }
 
 .sidebar__monogram {
-  width: 34px;
+  width: 30px;
 }
 
 .sidebar__monogram img {
@@ -59,9 +59,10 @@ button {
 .sidebar__text {
   writing-mode: vertical-rl;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 8px;
+  font-weight: 500;
   letter-spacing: 0.28em;
-  color: var(--color-muted);
+  color: var(--color-rich-black);
 }
 
 .sidebar__divider {
@@ -71,7 +72,7 @@ button {
 }
 
 .sidebar__signature {
-  width: 40px;
+  width: 35px;
 }
 
 .sidebar__signature img {
@@ -99,10 +100,14 @@ button {
   background: rgba(250, 249, 246, 0);
 }
 
-.header__logo {
-  text-transform: uppercase;
-  letter-spacing: 0.24em;
-  font-size: 13px;
+.header__logo{
+  width: 120px;
+}
+
+.header__logo img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .header__nav {
@@ -200,13 +205,21 @@ button {
 }
 
 .category-card {
+  position: relative;
   min-height: 220px;
   padding: 28px 36px;
   border-right: 1px solid var(--color-border);
+  overflow: hidden;
 
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 18px;
+}
+
+.category-card > span,
+.category-card > .category-card__body {
+  position: relative;
+  z-index: 1;
 }
 
 .category-card:last-child {
@@ -224,9 +237,33 @@ button {
   font-size: 28px;
 }
 
+.category-card__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.category-card__visual {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 70% 58%, rgba(214, 206, 194, 0.72) 0%, rgba(214, 206, 194, 0.14) 24%, rgba(214, 206, 194, 0) 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(243, 238, 231, 0.96) 100%);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  pointer-events: none;
+}
+
+.category-card--football .category-card__visual {
+  background-image: url('../assets/images/cat-football2.png');
+}
+
 .category-card a {
-  align-self: flex-end;
   font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* FEATURED */
