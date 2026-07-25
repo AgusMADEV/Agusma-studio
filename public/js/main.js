@@ -1,8 +1,17 @@
+import { fetchCategories, fetchFeaturedCollections } from "./modules/api.js";
+import { createCollectionCard } from "./modules/content-ui.js";
+
 const header = document.querySelector(".header");
 const categoryGrid = document.querySelector("[data-category-grid]");
 const categoryStatus = document.querySelector("[data-category-status]");
 const featuredGrid = document.querySelector("[data-featured-grid]");
 const featuredStatus = document.querySelector("[data-featured-status]");
+
+const defaultCategoryRoutes = {
+  football: "./football.php",
+  fashion: "./fashion.php",
+  "special-editions": "./special-editions.php",
+};
 
 window.addEventListener("scroll", () => {
   if (window.scrollY > 40) {
@@ -18,22 +27,16 @@ async function loadFeaturedCollections() {
   }
 
   try {
-    const response = await fetch("./api/featured-collections.php");
+    const collections = await fetchFeaturedCollections();
 
-    if (!response.ok) {
-      throw new Error("La respuesta del servidor no fue valida.");
-    }
-
-    const payload = await response.json();
-
-    if (!Array.isArray(payload.data) || payload.data.length === 0) {
+    if (!Array.isArray(collections) || collections.length === 0) {
       featuredStatus.textContent = "No hay colecciones destacadas publicadas todavia.";
       featuredGrid.innerHTML = "";
       return;
     }
 
     featuredGrid.replaceChildren(
-      ...payload.data.map((collection) => createCollectionCard(collection))
+      ...collections.map((collection) => createCollectionCard(collection))
     );
 
     featuredStatus.hidden = true;
@@ -49,50 +52,20 @@ async function loadCategories() {
   }
 
   try {
-    const response = await fetch("./api/categories.php");
+    const categories = await fetchCategories();
 
-    if (!response.ok) {
-      throw new Error("La respuesta del servidor no fue valida.");
-    }
-
-    const payload = await response.json();
-
-    if (!Array.isArray(payload.data) || payload.data.length === 0) {
+    if (!Array.isArray(categories) || categories.length === 0) {
       categoryStatus.textContent = "No hay categorias publicadas todavia.";
       return;
     }
 
     categoryGrid.replaceChildren(
-      ...payload.data.map((category, index) => createCategoryCard(category, index))
+      ...categories.map((category, index) => createCategoryCard(category, index))
     );
   } catch (error) {
     console.error(error);
     categoryStatus.textContent = "No se pudieron cargar las categorias desde la base de datos.";
   }
-}
-
-function createCollectionCard(collection) {
-  const article = document.createElement("article");
-  article.className = "collection-card";
-
-  const image = document.createElement("div");
-  image.className = collection.image_variant === "dark"
-    ? "collection-card__image collection-card__image--dark"
-    : "collection-card__image";
-
-  const info = document.createElement("div");
-  info.className = "collection-card__info";
-
-  const title = document.createElement("h3");
-  title.textContent = collection.title;
-
-  const year = document.createElement("span");
-  year.textContent = String(collection.collection_year);
-
-  info.append(title, year);
-  article.append(image, info);
-
-  return article;
 }
 
 function createCategoryCard(category, index) {
@@ -109,7 +82,7 @@ function createCategoryCard(category, index) {
   title.textContent = category.name;
 
   const link = document.createElement("a");
-  link.href = category.link_url || "#";
+  link.href = resolveCategoryHref(category);
   link.setAttribute("aria-label", `Open ${category.name} category`);
   link.textContent = "→";
 
@@ -121,6 +94,18 @@ function createCategoryCard(category, index) {
   article.append(number, body, visual);
 
   return article;
+}
+
+function resolveCategoryHref(category) {
+  const configuredHref = typeof category.link_url === "string"
+    ? category.link_url.trim()
+    : "";
+
+  if (configuredHref !== "" && configuredHref !== "#") {
+    return configuredHref;
+  }
+
+  return defaultCategoryRoutes[category.slug] || "#";
 }
 
 loadCategories();

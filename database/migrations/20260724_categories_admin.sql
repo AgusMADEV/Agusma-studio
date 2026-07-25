@@ -27,28 +27,48 @@ ALTER TABLE featured_collections
   ON UPDATE CASCADE;
 
 INSERT INTO categories (name, slug, visual_key, link_url, display_order)
-SELECT 'Football', 'football', 'football', '#', 1
+SELECT 'Football', 'football', 'football', './football.php', 1
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'football'
 );
 
-INSERT INTO categories (name, slug, visual_key, link_url, display_order)
-SELECT 'National Teams', 'national-teams', 'national-teams', '#', 2
+UPDATE categories
+SET link_url = './football.php'
+WHERE slug = 'football'
+  AND (link_url = '' OR link_url = '#' OR link_url = './football.html');
+
+INSERT INTO categories (name, slug, visual_key, link_url, display_order, is_active)
+SELECT 'National Teams', 'national-teams', 'national-teams', '#', 2, 0
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'national-teams'
 );
 
+UPDATE categories
+SET is_active = 0,
+    link_url = '#'
+WHERE slug = 'national-teams';
+
 INSERT INTO categories (name, slug, visual_key, link_url, display_order)
-SELECT 'Fashion', 'fashion', 'fashion', '#', 3
+SELECT 'Fashion', 'fashion', 'fashion', './fashion.php', 3
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'fashion'
 );
 
+UPDATE categories
+SET link_url = './fashion.php'
+WHERE slug = 'fashion'
+  AND (link_url = '' OR link_url = '#' OR link_url = './fashion.html');
+
 INSERT INTO categories (name, slug, visual_key, link_url, display_order)
-SELECT 'Special Editions', 'special-editions', 'special-editions', '#', 4
+SELECT 'Special Editions', 'special-editions', 'special-editions', './special-editions.php', 4
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'special-editions'
 );
+
+UPDATE categories
+SET link_url = './special-editions.php'
+WHERE slug = 'special-editions'
+  AND (link_url = '' OR link_url = '#' OR link_url = './special-editions.html');
 
 UPDATE featured_collections fc
 LEFT JOIN categories c ON c.slug = 'football'

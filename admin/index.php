@@ -2,152 +2,19 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/config/database.php';
-
-function adminRedirect(string $message): never
-{
-    header('Location: /Agusma-studio/admin/?message=' . urlencode($message));
-    exit;
-}
-
-function adminPostString(string $key): string
-{
-    return trim((string) ($_POST[$key] ?? ''));
-}
-
-function adminPostInt(string $key, int $default = 0): int
-{
-    return max(0, (int) ($_POST[$key] ?? $default));
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $connection = databaseConnection();
-    if (isset($_POST['delete_category'])) {
-      $statement = $connection->prepare('DELETE FROM categories WHERE id = :id');
-      $statement->execute([
-        ':id' => adminPostInt('id'),
-      ]);
-
-      adminRedirect('Categoria eliminada.');
-    }
-
-    if (isset($_POST['delete_collection'])) {
-      $statement = $connection->prepare('DELETE FROM featured_collections WHERE id = :id');
-      $statement->execute([
-        ':id' => adminPostInt('id'),
-      ]);
-
-      adminRedirect('Coleccion eliminada.');
-    }
-
-        $action = adminPostString('action');
-
-        if ($action === 'create_category') {
-            $statement = $connection->prepare(
-                'INSERT INTO categories (name, slug, visual_key, link_url, display_order, is_active)
-                VALUES (:name, :slug, :visual_key, :link_url, :display_order, :is_active)'
-            );
-            $statement->execute([
-                ':name' => adminPostString('name'),
-                ':slug' => adminPostString('slug'),
-                ':visual_key' => adminPostString('visual_key'),
-                ':link_url' => adminPostString('link_url') ?: '#',
-                ':display_order' => adminPostInt('display_order'),
-                ':is_active' => isset($_POST['is_active']) ? 1 : 0,
-            ]);
-
-            adminRedirect('Categoria creada.');
-        }
-
-        if ($action === 'update_category') {
-            $statement = $connection->prepare(
-                'UPDATE categories
-                SET name = :name,
-                    slug = :slug,
-                    visual_key = :visual_key,
-                    link_url = :link_url,
-                    display_order = :display_order,
-                    is_active = :is_active
-                WHERE id = :id'
-            );
-            $statement->execute([
-                ':id' => adminPostInt('id'),
-                ':name' => adminPostString('name'),
-                ':slug' => adminPostString('slug'),
-                ':visual_key' => adminPostString('visual_key'),
-                ':link_url' => adminPostString('link_url') ?: '#',
-                ':display_order' => adminPostInt('display_order'),
-                ':is_active' => isset($_POST['is_active']) ? 1 : 0,
-            ]);
-
-            adminRedirect('Categoria actualizada.');
-        }
-
-        if ($action === 'create_collection') {
-            $statement = $connection->prepare(
-                'INSERT INTO featured_collections (category_id, title, collection_year, image_variant, display_order, is_active)
-                VALUES (:category_id, :title, :collection_year, :image_variant, :display_order, :is_active)'
-            );
-            $statement->execute([
-                ':category_id' => adminPostInt('category_id') ?: null,
-                ':title' => adminPostString('title'),
-                ':collection_year' => adminPostInt('collection_year'),
-                ':image_variant' => adminPostString('image_variant') === 'dark' ? 'dark' : 'light',
-                ':display_order' => adminPostInt('display_order'),
-                ':is_active' => isset($_POST['is_active']) ? 1 : 0,
-            ]);
-
-            adminRedirect('Coleccion creada.');
-        }
-
-        if ($action === 'update_collection') {
-            $statement = $connection->prepare(
-                'UPDATE featured_collections
-                SET category_id = :category_id,
-                    title = :title,
-                    collection_year = :collection_year,
-                    image_variant = :image_variant,
-                    display_order = :display_order,
-                    is_active = :is_active
-                WHERE id = :id'
-            );
-            $statement->execute([
-                ':id' => adminPostInt('id'),
-                ':category_id' => adminPostInt('category_id') ?: null,
-                ':title' => adminPostString('title'),
-                ':collection_year' => adminPostInt('collection_year'),
-                ':image_variant' => adminPostString('image_variant') === 'dark' ? 'dark' : 'light',
-                ':display_order' => adminPostInt('display_order'),
-                ':is_active' => isset($_POST['is_active']) ? 1 : 0,
-            ]);
-
-            adminRedirect('Coleccion actualizada.');
-        }
-
-        adminRedirect('Accion no reconocida.');
-    } catch (Throwable $exception) {
-        error_log($exception->getMessage());
-        adminRedirect('No se pudo guardar el cambio.');
-    }
-}
+require_once __DIR__ . '/includes/bootstrap.php';
+require_once __DIR__ . '/includes/view-helpers.php';
+require_once __DIR__ . '/includes/page-data.php';
+require_once __DIR__ . '/actions/handle-request.php';
 
 $connection = databaseConnection();
-
-$categories = $connection->query(
-    'SELECT id, name, slug, visual_key, link_url, display_order, is_active
-    FROM categories
-    ORDER BY display_order ASC, id ASC'
-)->fetchAll();
-
-$collections = $connection->query(
-    'SELECT fc.id, fc.category_id, fc.title, fc.collection_year, fc.image_variant, fc.display_order, fc.is_active,
-            c.name AS category_name
-    FROM featured_collections fc
-    LEFT JOIN categories c ON c.id = fc.category_id
-    ORDER BY fc.display_order ASC, fc.id ASC'
-)->fetchAll();
-
+$dashboard = adminLoadDashboardData($connection);
+$categories = $dashboard['categories'];
+$entities = $dashboard['entities'];
+$collections = $dashboard['collections'];
+$pieces = $dashboard['pieces'];
+$mediaItems = $dashboard['mediaItems'];
+$legacyFeaturedCount = $dashboard['legacyFeaturedCount'];
 $flashMessage = trim((string) ($_GET['message'] ?? ''));
 ?>
 <!DOCTYPE html>
@@ -166,12 +33,14 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
         <p class="admin-eyebrow">Panel basico</p>
         <h1>Admin AgusMA Studio</h1>
       </div>
-      <a class="admin-link" href="../public/index.html">Ver web</a>
+      <a class="admin-link" href="../public/index.php">Ver web</a>
     </header>
 
     <?php if ($flashMessage !== ''): ?>
-      <p class="admin-flash"><?= htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8') ?></p>
+      <p class="admin-flash"><?= adminEscape($flashMessage) ?></p>
     <?php endif; ?>
+
+    <p class="admin-flash">Legacy: la tabla featured_collections sigue presente con <?= $legacyFeaturedCount ?> registros mientras termina la migracion del contenido.</p>
 
     <section class="admin-grid">
       <section class="admin-card admin-card--form">
@@ -180,7 +49,10 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
           <input type="hidden" name="action" value="create_category" />
           <label>Nombre<input type="text" name="name" required /></label>
           <label>Slug<input type="text" name="slug" required /></label>
+          <label>Resumen<input type="text" name="short_description" /></label>
+          <label>Descripcion<textarea name="description"></textarea></label>
           <label>Visual key<input type="text" name="visual_key" required /></label>
+          <label>Cover image<input type="text" name="cover_image" /></label>
           <label>Enlace<input type="text" name="link_url" value="#" /></label>
           <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
           <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
@@ -189,28 +61,125 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
       </section>
 
       <section class="admin-card admin-card--form">
-        <h2>Nueva coleccion</h2>
+        <h2>Nueva entidad</h2>
         <form method="post" class="admin-form">
-          <input type="hidden" name="action" value="create_collection" />
-          <label>Titulo<input type="text" name="title" required /></label>
           <label>Categoria
-            <select name="category_id">
-              <option value="0">Sin categoria</option>
+            <select name="category_id" required>
               <?php foreach ($categories as $category): ?>
-                <option value="<?= (int) $category['id'] ?>"><?= htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8') ?></option>
+                <option value="<?= (int) $category['id'] ?>"><?= adminEscape(adminCategoryLabel($category)) ?></option>
               <?php endforeach; ?>
             </select>
           </label>
-          <label>Ano<input type="number" name="collection_year" value="2026" min="1900" max="2100" required /></label>
-          <label>Visual
-            <select name="image_variant">
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
+          <input type="hidden" name="action" value="create_entity" />
+          <label>Nombre<input type="text" name="name" required /></label>
+          <label>Slug<input type="text" name="slug" required /></label>
+          <label>Entity type<input type="text" name="entity_type" value="other" required /></label>
+          <label>Subtitle<input type="text" name="subtitle" /></label>
+          <label>Resumen<input type="text" name="short_description" /></label>
+          <label>Descripcion<textarea name="description"></textarea></label>
+          <label>Logo URL<input type="text" name="logo_url" /></label>
+          <label>Cover image<input type="text" name="cover_image" /></label>
+          <label>Primary color<input type="text" name="primary_color" /></label>
+          <label>Secondary color<input type="text" name="secondary_color" /></label>
+          <label>Background color<input type="text" name="background_color" /></label>
+          <label>Text color<input type="text" name="text_color" /></label>
+          <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_featured" /> Destacada</label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
+          <button type="submit">Crear entidad</button>
+        </form>
+      </section>
+
+      <section class="admin-card admin-card--form">
+        <h2>Nueva coleccion</h2>
+        <form method="post" class="admin-form">
+          <input type="hidden" name="action" value="create_collection" />
+          <label>Entidad
+            <select name="entity_id" required>
+              <?php foreach ($entities as $entity): ?>
+                <option value="<?= (int) $entity['id'] ?>"><?= adminEscape(adminEntityLabel($entity)) ?></option>
+              <?php endforeach; ?>
             </select>
           </label>
+          <label>Nombre<input type="text" name="name" required /></label>
+          <label>Slug<input type="text" name="slug" required /></label>
+          <label>Subtitle<input type="text" name="subtitle" /></label>
+          <label>Ano<input type="number" name="collection_year" min="1900" max="2100" /></label>
+          <label>Season<input type="text" name="season" /></label>
+          <label>Resumen<input type="text" name="short_description" /></label>
+          <label>Descripcion<textarea name="description"></textarea></label>
+          <label>Concept<textarea name="concept"></textarea></label>
+          <label>Cover image<input type="text" name="cover_image" /></label>
+          <label>Thumbnail image<input type="text" name="thumbnail_image" /></label>
+          <label>Primary color<input type="text" name="primary_color" /></label>
+          <label>Secondary color<input type="text" name="secondary_color" /></label>
+          <label>Background color<input type="text" name="background_color" /></label>
+          <label>Text color<input type="text" name="text_color" /></label>
+          <label>Image variant<input type="text" name="image_variant" value="light" /></label>
+          <label>Layout style<input type="text" name="layout_style" value="standard" /></label>
+          <label>Published at<input type="datetime-local" name="published_at" /></label>
           <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_featured" /> Destacada</label>
           <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
           <button type="submit">Crear coleccion</button>
+        </form>
+      </section>
+
+      <section class="admin-card admin-card--form">
+        <h2>Nueva pieza</h2>
+        <form method="post" class="admin-form">
+          <input type="hidden" name="action" value="create_piece" />
+          <label>Coleccion
+            <select name="collection_id" required>
+              <?php foreach ($collections as $collection): ?>
+                <option value="<?= (int) $collection['id'] ?>"><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <label>Nombre<input type="text" name="name" required /></label>
+          <label>Slug<input type="text" name="slug" required /></label>
+          <label>Piece type<input type="text" name="piece_type" value="other" required /></label>
+          <label>Subtitle<input type="text" name="subtitle" /></label>
+          <label>Resumen<input type="text" name="short_description" /></label>
+          <label>Descripcion<textarea name="description"></textarea></label>
+          <label>Cover image<input type="text" name="cover_image" /></label>
+          <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_featured" /> Destacada</label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
+          <button type="submit">Crear pieza</button>
+        </form>
+      </section>
+
+      <section class="admin-card admin-card--form">
+        <h2>Nueva multimedia</h2>
+        <form method="post" class="admin-form">
+          <input type="hidden" name="action" value="create_media" />
+          <label>Coleccion
+            <select name="collection_id" required>
+              <?php foreach ($collections as $collection): ?>
+                <option value="<?= (int) $collection['id'] ?>"><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <label>Pieza opcional
+            <select name="piece_id">
+              <option value="">Multimedia general de la coleccion</option>
+              <?php foreach ($pieces as $piece): ?>
+                <option value="<?= (int) $piece['id'] ?>"><?= adminEscape(adminPieceLabel($piece)) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <label>Media type<input type="text" name="media_type" value="image" required /></label>
+          <label>File URL / ruta<input type="text" name="file_url" required /></label>
+          <label>Thumbnail URL<input type="text" name="thumbnail_url" /></label>
+          <label>Titulo<input type="text" name="title" /></label>
+          <label>Alt text<input type="text" name="alt_text" /></label>
+          <label>Caption<textarea name="caption"></textarea></label>
+          <label>Section key<input type="text" name="section_key" /></label>
+          <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_cover" /> Portada</label>
+          <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
+          <button type="submit">Crear multimedia</button>
         </form>
       </section>
     </section>
@@ -226,15 +195,18 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
           <form method="post" class="admin-item">
             <input type="hidden" name="action" value="update_category" />
             <input type="hidden" name="id" value="<?= (int) $category['id'] ?>" />
-            <label>Nombre<input type="text" name="name" value="<?= htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8') ?>" required /></label>
-            <label>Slug<input type="text" name="slug" value="<?= htmlspecialchars($category['slug'], ENT_QUOTES, 'UTF-8') ?>" required /></label>
-            <label>Visual key<input type="text" name="visual_key" value="<?= htmlspecialchars($category['visual_key'], ENT_QUOTES, 'UTF-8') ?>" required /></label>
-            <label>Enlace<input type="text" name="link_url" value="<?= htmlspecialchars($category['link_url'], ENT_QUOTES, 'UTF-8') ?>" /></label>
+            <label>Nombre<input type="text" name="name" value="<?= adminEscape($category['name']) ?>" required /></label>
+            <label>Slug<input type="text" name="slug" value="<?= adminEscape($category['slug']) ?>" required /></label>
+            <label>Resumen<input type="text" name="short_description" value="<?= adminEscape($category['short_description']) ?>" /></label>
+            <label>Descripcion<textarea name="description"><?= adminEscape($category['description']) ?></textarea></label>
+            <label>Visual key<input type="text" name="visual_key" value="<?= adminEscape($category['visual_key']) ?>" required /></label>
+            <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($category['cover_image']) ?>" /></label>
+            <label>Enlace<input type="text" name="link_url" value="<?= adminEscape($category['link_url']) ?>" /></label>
             <label>Orden<input type="number" name="display_order" value="<?= (int) $category['display_order'] ?>" min="0" /></label>
-            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= (int) $category['is_active'] === 1 ? 'checked' : '' ?> /> Activa</label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($category['is_active']) ?> /> Activa</label>
             <div class="admin-actions">
               <button type="submit">Guardar</button>
-              <button type="submit" name="delete_category" value="1" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta categoria. Continuar?');">Eliminar</button>
+              <button type="submit" name="submit_action" value="delete_category" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta categoria. Continuar?');">Eliminar</button>
             </div>
           </form>
         <?php endforeach; ?>
@@ -243,7 +215,49 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
 
     <section class="admin-card">
       <div class="admin-section-title">
-        <h2>Colecciones destacadas</h2>
+        <h2>Entidades</h2>
+        <p><?= count($entities) ?> registradas</p>
+      </div>
+
+      <div class="admin-list">
+        <?php foreach ($entities as $entity): ?>
+          <form method="post" class="admin-item">
+            <input type="hidden" name="action" value="update_entity" />
+            <input type="hidden" name="id" value="<?= (int) $entity['id'] ?>" />
+            <label>Categoria
+              <select name="category_id" required>
+                <?php foreach ($categories as $category): ?>
+                  <option value="<?= (int) $category['id'] ?>" <?= adminSelected($entity['category_id'], $category['id']) ?>><?= adminEscape(adminCategoryLabel($category)) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
+            <label>Nombre<input type="text" name="name" value="<?= adminEscape($entity['name']) ?>" required /></label>
+            <label>Slug<input type="text" name="slug" value="<?= adminEscape($entity['slug']) ?>" required /></label>
+            <label>Entity type<input type="text" name="entity_type" value="<?= adminEscape($entity['entity_type']) ?>" required /></label>
+            <label>Subtitle<input type="text" name="subtitle" value="<?= adminEscape($entity['subtitle']) ?>" /></label>
+            <label>Resumen<input type="text" name="short_description" value="<?= adminEscape($entity['short_description']) ?>" /></label>
+            <label>Descripcion<textarea name="description"><?= adminEscape($entity['description']) ?></textarea></label>
+            <label>Logo URL<input type="text" name="logo_url" value="<?= adminEscape($entity['logo_url']) ?>" /></label>
+            <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($entity['cover_image']) ?>" /></label>
+            <label>Primary color<input type="text" name="primary_color" value="<?= adminEscape($entity['primary_color']) ?>" /></label>
+            <label>Secondary color<input type="text" name="secondary_color" value="<?= adminEscape($entity['secondary_color']) ?>" /></label>
+            <label>Background color<input type="text" name="background_color" value="<?= adminEscape($entity['background_color']) ?>" /></label>
+            <label>Text color<input type="text" name="text_color" value="<?= adminEscape($entity['text_color']) ?>" /></label>
+            <label>Orden<input type="number" name="display_order" value="<?= (int) $entity['display_order'] ?>" min="0" /></label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($entity['is_featured']) ?> /> Destacada</label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($entity['is_active']) ?> /> Activa</label>
+            <div class="admin-actions">
+              <button type="submit">Guardar</button>
+              <button type="submit" name="submit_action" value="delete_entity" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta entidad. Continuar?');">Eliminar</button>
+            </div>
+          </form>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-section-title">
+        <h2>Colecciones</h2>
         <p><?= count($collections) ?> registradas</p>
       </div>
 
@@ -252,27 +266,118 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
           <form method="post" class="admin-item">
             <input type="hidden" name="action" value="update_collection" />
             <input type="hidden" name="id" value="<?= (int) $collection['id'] ?>" />
-            <label>Titulo<input type="text" name="title" value="<?= htmlspecialchars($collection['title'], ENT_QUOTES, 'UTF-8') ?>" required /></label>
-            <label>Categoria
-              <select name="category_id">
-                <option value="0">Sin categoria</option>
-                <?php foreach ($categories as $category): ?>
-                  <option value="<?= (int) $category['id'] ?>" <?= (int) $collection['category_id'] === (int) $category['id'] ? 'selected' : '' ?>><?= htmlspecialchars($category['name'], ENT_QUOTES, 'UTF-8') ?></option>
+            <label>Entidad
+              <select name="entity_id" required>
+                <?php foreach ($entities as $entity): ?>
+                  <option value="<?= (int) $entity['id'] ?>" <?= adminSelected($collection['entity_id'], $entity['id']) ?>><?= adminEscape(adminEntityLabel($entity)) ?></option>
                 <?php endforeach; ?>
               </select>
             </label>
-            <label>Ano<input type="number" name="collection_year" value="<?= (int) $collection['collection_year'] ?>" min="1900" max="2100" required /></label>
-            <label>Visual
-              <select name="image_variant">
-                <option value="light" <?= $collection['image_variant'] === 'light' ? 'selected' : '' ?>>Light</option>
-                <option value="dark" <?= $collection['image_variant'] === 'dark' ? 'selected' : '' ?>>Dark</option>
-              </select>
-            </label>
+            <label>Nombre<input type="text" name="name" value="<?= adminEscape($collection['name']) ?>" required /></label>
+            <label>Slug<input type="text" name="slug" value="<?= adminEscape($collection['slug']) ?>" required /></label>
+            <label>Subtitle<input type="text" name="subtitle" value="<?= adminEscape($collection['subtitle']) ?>" /></label>
+            <label>Ano<input type="number" name="collection_year" value="<?= adminEscape($collection['collection_year']) ?>" min="1900" max="2100" /></label>
+            <label>Season<input type="text" name="season" value="<?= adminEscape($collection['season']) ?>" /></label>
+            <label>Resumen<input type="text" name="short_description" value="<?= adminEscape($collection['short_description']) ?>" /></label>
+            <label>Descripcion<textarea name="description"><?= adminEscape($collection['description']) ?></textarea></label>
+            <label>Concept<textarea name="concept"><?= adminEscape($collection['concept']) ?></textarea></label>
+            <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($collection['cover_image']) ?>" /></label>
+            <label>Thumbnail image<input type="text" name="thumbnail_image" value="<?= adminEscape($collection['thumbnail_image']) ?>" /></label>
+            <label>Primary color<input type="text" name="primary_color" value="<?= adminEscape($collection['primary_color']) ?>" /></label>
+            <label>Secondary color<input type="text" name="secondary_color" value="<?= adminEscape($collection['secondary_color']) ?>" /></label>
+            <label>Background color<input type="text" name="background_color" value="<?= adminEscape($collection['background_color']) ?>" /></label>
+            <label>Text color<input type="text" name="text_color" value="<?= adminEscape($collection['text_color']) ?>" /></label>
+            <label>Image variant<input type="text" name="image_variant" value="<?= adminEscape($collection['image_variant']) ?>" /></label>
+            <label>Layout style<input type="text" name="layout_style" value="<?= adminEscape($collection['layout_style']) ?>" /></label>
+            <label>Published at<input type="datetime-local" name="published_at" value="<?= adminEscape(adminFormatDateTimeInput($collection['published_at'])) ?>" /></label>
             <label>Orden<input type="number" name="display_order" value="<?= (int) $collection['display_order'] ?>" min="0" /></label>
-            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= (int) $collection['is_active'] === 1 ? 'checked' : '' ?> /> Activa</label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($collection['is_featured']) ?> /> Destacada</label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($collection['is_active']) ?> /> Activa</label>
             <div class="admin-actions">
               <button type="submit">Guardar</button>
-              <button type="submit" name="delete_collection" value="1" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta coleccion. Continuar?');">Eliminar</button>
+              <button type="submit" name="submit_action" value="delete_collection" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta coleccion. Continuar?');">Eliminar</button>
+            </div>
+          </form>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-section-title">
+        <h2>Piezas</h2>
+        <p><?= count($pieces) ?> registradas</p>
+      </div>
+
+      <div class="admin-list">
+        <?php foreach ($pieces as $piece): ?>
+          <form method="post" class="admin-item">
+            <input type="hidden" name="action" value="update_piece" />
+            <input type="hidden" name="id" value="<?= (int) $piece['id'] ?>" />
+            <label>Coleccion
+              <select name="collection_id" required>
+                <?php foreach ($collections as $collection): ?>
+                  <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($piece['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
+            <label>Nombre<input type="text" name="name" value="<?= adminEscape($piece['name']) ?>" required /></label>
+            <label>Slug<input type="text" name="slug" value="<?= adminEscape($piece['slug']) ?>" required /></label>
+            <label>Piece type<input type="text" name="piece_type" value="<?= adminEscape($piece['piece_type']) ?>" required /></label>
+            <label>Subtitle<input type="text" name="subtitle" value="<?= adminEscape($piece['subtitle']) ?>" /></label>
+            <label>Resumen<input type="text" name="short_description" value="<?= adminEscape($piece['short_description']) ?>" /></label>
+            <label>Descripcion<textarea name="description"><?= adminEscape($piece['description']) ?></textarea></label>
+            <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($piece['cover_image']) ?>" /></label>
+            <label>Orden<input type="number" name="display_order" value="<?= (int) $piece['display_order'] ?>" min="0" /></label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($piece['is_featured']) ?> /> Destacada</label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($piece['is_active']) ?> /> Activa</label>
+            <div class="admin-actions">
+              <button type="submit">Guardar</button>
+              <button type="submit" name="submit_action" value="delete_piece" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta pieza. Continuar?');">Eliminar</button>
+            </div>
+          </form>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-section-title">
+        <h2>Multimedia</h2>
+        <p><?= count($mediaItems) ?> registradas</p>
+      </div>
+
+      <div class="admin-list">
+        <?php foreach ($mediaItems as $media): ?>
+          <form method="post" class="admin-item">
+            <input type="hidden" name="action" value="update_media" />
+            <input type="hidden" name="id" value="<?= (int) $media['id'] ?>" />
+            <label>Coleccion
+              <select name="collection_id" required>
+                <?php foreach ($collections as $collection): ?>
+                  <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($media['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
+            <label>Pieza opcional
+              <select name="piece_id">
+                <option value="">Multimedia general de la coleccion</option>
+                <?php foreach ($pieces as $piece): ?>
+                  <option value="<?= (int) $piece['id'] ?>" <?= adminSelected($media['piece_id'], $piece['id']) ?>><?= adminEscape(adminPieceLabel($piece)) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
+            <label>Media type<input type="text" name="media_type" value="<?= adminEscape($media['media_type']) ?>" required /></label>
+            <label>File URL / ruta<input type="text" name="file_url" value="<?= adminEscape($media['file_url']) ?>" required /></label>
+            <label>Thumbnail URL<input type="text" name="thumbnail_url" value="<?= adminEscape($media['thumbnail_url']) ?>" /></label>
+            <label>Titulo<input type="text" name="title" value="<?= adminEscape($media['title']) ?>" /></label>
+            <label>Alt text<input type="text" name="alt_text" value="<?= adminEscape($media['alt_text']) ?>" /></label>
+            <label>Caption<textarea name="caption"><?= adminEscape($media['caption']) ?></textarea></label>
+            <label>Section key<input type="text" name="section_key" value="<?= adminEscape($media['section_key']) ?>" /></label>
+            <label>Orden<input type="number" name="display_order" value="<?= (int) $media['display_order'] ?>" min="0" /></label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_cover" <?= adminChecked($media['is_cover']) ?> /> Portada</label>
+            <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($media['is_active']) ?> /> Activa</label>
+            <div class="admin-actions">
+              <button type="submit">Guardar</button>
+              <button type="submit" name="submit_action" value="delete_media" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara este elemento multimedia. Continuar?');">Eliminar</button>
             </div>
           </form>
         <?php endforeach; ?>
