@@ -81,6 +81,11 @@ textarea {
   gap: 14px;
 }
 
+.admin-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
 .admin-form label,
 .admin-item label {
   display: grid;
@@ -88,6 +93,15 @@ textarea {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  align-content: start;
+}
+
+.admin-form label:has(textarea),
+.admin-item label:has(textarea),
+.admin-form .admin-checkbox,
+.admin-item .admin-checkbox,
+.admin-actions {
+  grid-column: 1 / -1;
 }
 
 .admin-form input,
@@ -160,17 +174,108 @@ textarea {
 
 .admin-list {
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
 }
 
 .admin-item {
+  min-width: 1180px;
+  gap: 18px;
   padding: 18px;
   border: 1px solid var(--color-border);
   background: rgba(247, 244, 239, 0.9);
 }
 
+.admin-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(58, 44, 27, 0.12);
+}
+
+.admin-item-kicker,
+.admin-item-title {
+  margin: 0;
+}
+
+.admin-item-kicker {
+  color: var(--color-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.admin-item-title {
+  margin-top: 6px;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.admin-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.admin-item-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--color-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-item-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
+  gap: 14px 16px;
+  align-items: start;
+}
+
+.admin-item-grid > label {
+  min-width: 0;
+}
+
+.admin-field--wide,
+.admin-item-grid .admin-checkbox,
+.admin-item-grid .admin-actions {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 860px) {
   .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form,
+  .admin-list {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-item {
+    min-width: 0;
+  }
+
+  .admin-item-header {
+    flex-direction: column;
+  }
+
+  .admin-item-meta {
+    justify-content: flex-start;
+  }
+
+  .admin-item-grid {
     grid-template-columns: 1fr;
   }
 
