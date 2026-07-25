@@ -6,7 +6,7 @@ require_once dirname(__DIR__, 2) . '/config/database.php';
 
 function adminRedirect(string $message): never
 {
-    header('Location: /Agusma-studio/admin/?message=' . urlencode($message));
+    header('Location: ?message=' . urlencode($message) . '#crear-contenido');
     exit;
 }
 
