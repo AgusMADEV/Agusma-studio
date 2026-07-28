@@ -59,6 +59,7 @@ Campos relevantes:
 - description
 - visual_key
 - cover_image
+- hero_image
 - link_url
 - display_order
 - is_active

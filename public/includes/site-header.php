@@ -5,8 +5,9 @@ declare(strict_types=1);
 $headerNavLinks = $headerNavLinks ?? [];
 $homeHref = $homeHref ?? './index.php';
 $headerActionLink = $headerActionLink ?? ['href' => '#contact', 'label' => 'Contact'];
+$headerClass = trim((string) ($headerClass ?? 'header'));
 ?>
-<header class="header">
+<header class="<?= htmlspecialchars($headerClass, ENT_QUOTES, 'UTF-8') ?>">
   <a href="<?= htmlspecialchars($homeHref, ENT_QUOTES, 'UTF-8') ?>" class="header__logo"><img src="./assets/images/logo.svg" alt="AgusMA Studio Logo" /></a>
 
   <nav class="header__nav" aria-label="Primary">

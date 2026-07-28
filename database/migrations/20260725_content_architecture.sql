@@ -5,7 +5,8 @@ START TRANSACTION;
 ALTER TABLE categories
   ADD COLUMN IF NOT EXISTS short_description VARCHAR(255) NULL AFTER slug,
   ADD COLUMN IF NOT EXISTS description TEXT NULL AFTER short_description,
-  ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER visual_key;
+  ADD COLUMN IF NOT EXISTS cover_image VARCHAR(255) NULL AFTER visual_key,
+  ADD COLUMN IF NOT EXISTS hero_image VARCHAR(255) NULL AFTER cover_image;
 
 UPDATE categories
 SET short_description = CASE slug
@@ -26,6 +27,12 @@ SET short_description = CASE slug
       WHEN 'special-editions' THEN COALESCE(cover_image, './assets/images/cat-special.png')
       ELSE cover_image
     END,
+    hero_image = CASE slug
+      WHEN 'football' THEN COALESCE(hero_image, './assets/images/hero-bg3b.svg')
+      WHEN 'fashion' THEN COALESCE(hero_image, cover_image, './assets/images/cat-fashion.png')
+      WHEN 'special-editions' THEN COALESCE(hero_image, cover_image, './assets/images/cat-special.png')
+      ELSE COALESCE(hero_image, cover_image)
+    END,
     link_url = CASE slug
       WHEN 'football' THEN './football.php'
       WHEN 'fashion' THEN './fashion.php'
@@ -41,20 +48,20 @@ SET is_active = 0,
     description = COALESCE(description, 'National Teams has been absorbed into Football entities using entity_type = national_team.')
 WHERE slug = 'national-teams';
 
-INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active)
-SELECT 'Football', 'football', 'Club football, national teams and collectible kit concepts.', 'Football gathers club projects, national team narratives and archive-driven kit systems inside a single category.', 'football', './assets/images/cat-football2.png', './football.php', 1, 1
+INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active)
+SELECT 'Football', 'football', 'Club football, national teams and collectible kit concepts.', 'Football gathers club projects, national team narratives and archive-driven kit systems inside a single category.', 'football', './assets/images/cat-football2.png', './assets/images/hero-bg3b.svg', './football.php', 1, 1
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'football'
 );
 
-INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active)
-SELECT 'Fashion', 'fashion', 'Editorial garments, styling systems and wearable concepts.', 'Fashion collects AgusMA Studio garment concepts and styling-led editorial explorations.', 'fashion', './assets/images/cat-fashion.png', './fashion.php', 2, 1
+INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active)
+SELECT 'Fashion', 'fashion', 'Editorial garments, styling systems and wearable concepts.', 'Fashion collects AgusMA Studio garment concepts and styling-led editorial explorations.', 'fashion', './assets/images/cat-fashion.png', './assets/images/cat-fashion.png', './fashion.php', 2, 1
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'fashion'
 );
 
-INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active)
-SELECT 'Special Editions', 'special-editions', 'Limited releases and experimental collectible concepts.', 'Special Editions focuses on rarer releases, collectible drops and exceptional concept capsules.', 'special-editions', './assets/images/cat-special.png', './special-editions.php', 3, 1
+INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active)
+SELECT 'Special Editions', 'special-editions', 'Limited releases and experimental collectible concepts.', 'Special Editions focuses on rarer releases, collectible drops and exceptional concept capsules.', 'special-editions', './assets/images/cat-special.png', './assets/images/cat-special.png', './special-editions.php', 3, 1
 WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE slug = 'special-editions'
 );

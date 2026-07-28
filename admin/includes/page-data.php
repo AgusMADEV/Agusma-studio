@@ -16,7 +16,7 @@ function adminLegacyFeaturedCount(PDO $connection): int
 function adminLoadDashboardData(PDO $connection): array
 {
     $categories = $connection->query(
-        "SELECT id, name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active
+        "SELECT id, name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active
         FROM categories
         WHERE slug <> 'national-teams'
         ORDER BY display_order ASC, id ASC"

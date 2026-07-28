@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 function contentFetchCategories(PDO $connection, bool $activeOnly = true): array
 {
-    $sql = 'SELECT id, name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active
+    $sql = 'SELECT id, name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active
         FROM categories';
 
     if ($activeOnly) {
@@ -18,7 +18,7 @@ function contentFetchCategories(PDO $connection, bool $activeOnly = true): array
 
 function contentFetchCategoryBySlug(PDO $connection, string $slug, bool $activeOnly = true): ?array
 {
-    $sql = 'SELECT id, name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active
+    $sql = 'SELECT id, name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active
         FROM categories
         WHERE slug = :slug';
 
@@ -44,6 +44,7 @@ function contentFetchEntityBySlug(PDO $connection, string $categorySlug, string 
             c.description AS category_description,
             c.visual_key AS category_visual_key,
             c.cover_image AS category_cover_image,
+            c.hero_image AS category_hero_image,
             c.link_url AS category_link_url,
             e.id,
             e.name,
@@ -172,6 +173,7 @@ function contentFetchCollectionsByEntity(PDO $connection, string $categorySlug, 
             'description' => $entity['category_description'],
             'visual_key' => $entity['category_visual_key'],
             'cover_image' => $entity['category_cover_image'],
+            'hero_image' => $entity['category_hero_image'],
             'link_url' => $entity['category_link_url'],
         ],
         'entity' => [
@@ -206,6 +208,7 @@ function contentFetchCollectionRecord(PDO $connection, string $categorySlug, str
             c.description AS category_description,
             c.visual_key AS category_visual_key,
             c.cover_image AS category_cover_image,
+            c.hero_image AS category_hero_image,
             c.link_url AS category_link_url,
             e.id AS entity_id,
             e.name AS entity_name,
@@ -355,6 +358,7 @@ function contentFetchCollectionDetail(PDO $connection, string $categorySlug, str
             'description' => $collection['category_description'],
             'visual_key' => $collection['category_visual_key'],
             'cover_image' => $collection['category_cover_image'],
+            'hero_image' => $collection['category_hero_image'],
             'link_url' => $collection['category_link_url'],
         ],
         'entity' => [

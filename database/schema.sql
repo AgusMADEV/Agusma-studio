@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS categories (
   description TEXT NULL,
   visual_key VARCHAR(60) NOT NULL,
   cover_image VARCHAR(255) NULL,
+  hero_image VARCHAR(255) NULL,
   link_url VARCHAR(255) NOT NULL DEFAULT '#',
   display_order INT UNSIGNED NOT NULL DEFAULT 0,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -162,16 +163,16 @@ CREATE TABLE IF NOT EXISTS collection_tags (
     ON DELETE CASCADE
 );
 
-INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active)
-SELECT 'Football', 'football', 'Club football, national teams and collectible kit concepts.', 'Football gathers club projects, national team narratives and archive-driven kit systems inside a single category.', 'football', './assets/images/cat-football2.png', './football.php', 1, 1
+INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active)
+SELECT 'Football', 'football', 'Club football, national teams and collectible kit concepts.', 'Football gathers club projects, national team narratives and archive-driven kit systems inside a single category.', 'football', './assets/images/cat-football2.png', './assets/images/hero-bg3b.svg', './football.php', 1, 1
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = 'football');
 
-INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active)
-SELECT 'Fashion', 'fashion', 'Editorial garments, styling systems and wearable concepts.', 'Fashion collects AgusMA Studio garment concepts and styling-led editorial explorations.', 'fashion', './assets/images/cat-fashion.png', './fashion.php', 2, 1
+INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active)
+SELECT 'Fashion', 'fashion', 'Editorial garments, styling systems and wearable concepts.', 'Fashion collects AgusMA Studio garment concepts and styling-led editorial explorations.', 'fashion', './assets/images/cat-fashion.png', './assets/images/cat-fashion.png', './fashion.php', 2, 1
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = 'fashion');
 
-INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, link_url, display_order, is_active)
-SELECT 'Special Editions', 'special-editions', 'Limited releases and experimental collectible concepts.', 'Special Editions focuses on rarer releases, collectible drops and exceptional concept capsules.', 'special-editions', './assets/images/cat-special.png', './special-editions.php', 3, 1
+INSERT INTO categories (name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active)
+SELECT 'Special Editions', 'special-editions', 'Limited releases and experimental collectible concepts.', 'Special Editions focuses on rarer releases, collectible drops and exceptional concept capsules.', 'special-editions', './assets/images/cat-special.png', './assets/images/cat-special.png', './special-editions.php', 3, 1
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = 'special-editions');
 
 INSERT INTO entities (category_id, name, slug, entity_type, subtitle, short_description, description, display_order, is_featured, is_active, primary_color, secondary_color, background_color, text_color)

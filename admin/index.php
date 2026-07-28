@@ -141,6 +141,7 @@ $totalMedia = count($mediaItems);
                 <label>Descripcion<textarea name="description"></textarea></label>
                 <label>Visual key<input type="text" name="visual_key" required /></label>
                 <label>Cover image<input type="text" name="cover_image" /></label>
+                <label>Hero image<input type="text" name="hero_image" /></label>
                 <label>Enlace<input type="text" name="link_url" value="#" /></label>
                 <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
                 <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
@@ -318,6 +319,7 @@ $totalMedia = count($mediaItems);
                   <label class="admin-field--wide">Resumen<input type="text" name="short_description" value="<?= adminEscape($category['short_description']) ?>" /></label>
                   <label class="admin-field--wide">Descripcion<textarea name="description"><?= adminEscape($category['description']) ?></textarea></label>
                   <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($category['cover_image']) ?>" /></label>
+                  <label>Hero image<input type="text" name="hero_image" value="<?= adminEscape($category['hero_image']) ?>" /></label>
                   <label>Enlace<input type="text" name="link_url" value="<?= adminEscape($category['link_url']) ?>" /></label>
                   <label>Orden<input type="number" name="display_order" value="<?= (int) $category['display_order'] ?>" min="0" /></label>
                   <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($category['is_active']) ?> /> Activa</label>

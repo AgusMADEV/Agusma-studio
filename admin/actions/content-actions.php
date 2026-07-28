@@ -85,6 +85,7 @@ function adminBuildCategoryData(): array
         'description' => adminPostNullableString('description'),
         'visual_key' => adminPostString('visual_key'),
         'cover_image' => adminPostNullableString('cover_image'),
+        'hero_image' => adminPostNullableString('hero_image'),
         'link_url' => adminNormalizeLink(adminPostNullableString('link_url')),
         'display_order' => adminPostInt('display_order'),
         'is_active' => adminPostBool('is_active'),

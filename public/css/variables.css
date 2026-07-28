@@ -28,6 +28,8 @@
   --color-warm-stone: #d8d2c8;
   --color-mist-grey: #b8b4ad;
   --color-pure-white: #ffffff;
+  --color-sidebar-background: #f8f4f0;
+  --color-cards-background: #f2eeeb;
 
   --color-background: var(--color-soft-ivory);
   --color-text: var(--color-rich-black);
