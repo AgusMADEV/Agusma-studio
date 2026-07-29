@@ -32,45 +32,58 @@ $totalMedia = count($mediaItems);
   <link rel="stylesheet" href="../public/css/admin.css" />
 </head>
 <body>
-  <main class="admin-shell">
-    <header class="admin-header">
-      <div>
-        <p class="admin-eyebrow">Panel administrativo</p>
-        <h1>Admin AgusMA Studio</h1>
-        <p class="admin-lead">Gestiona el contenido por niveles: categorias, entidades, colecciones, piezas y multimedia, con una vista mas clara para crear y mantener todo desde un mismo lugar.</p>
+  <div class="admin-app">
+    <aside class="admin-sidebar" aria-label="Vistas del panel">
+      <div class="admin-brand">
+        <a href="#categorias" data-admin-nav>
+          <strong>AGUSMA</strong>
+          <span>Studio</span>
+        </a>
       </div>
-      <div class="admin-header-actions">
-        <a class="admin-link" href="#crear-contenido">Crear contenido</a>
-        <a class="admin-link" href="#resumen">Resumen</a>
-        <a class="admin-link" href="../public/index.php">Ver web</a>
-      </div>
-    </header>
 
-    <?php if ($flashMessage !== ''): ?>
-      <p class="admin-flash"><?= adminEscape($flashMessage) ?></p>
-    <?php endif; ?>
+      <nav class="admin-sidebar-nav">
+        <a class="admin-sidebar-link" href="#resumen" data-admin-nav><span class="admin-sidebar-icon"></span><span>Resumen</span></a>
+        <a class="admin-sidebar-link" href="#categorias" data-admin-nav><span class="admin-sidebar-icon"></span><span>Categorias</span></a>
+        <a class="admin-sidebar-link" href="#entidades" data-admin-nav><span class="admin-sidebar-icon"></span><span>Entidades</span></a>
+        <a class="admin-sidebar-link" href="#colecciones" data-admin-nav><span class="admin-sidebar-icon"></span><span>Colecciones</span></a>
+        <a class="admin-sidebar-link" href="#piezas" data-admin-nav><span class="admin-sidebar-icon"></span><span>Piezas</span></a>
+        <a class="admin-sidebar-link" href="#multimedia" data-admin-nav><span class="admin-sidebar-icon"></span><span>Multimedia</span></a>
+      </nav>
 
-    <div class="admin-layout">
-      <aside class="admin-sidebar" aria-label="Vistas del panel">
-        <div class="admin-sidebar__intro">
-          <p class="admin-eyebrow">Vistas</p>
-          <h2>Panel lateral</h2>
-          <p>Abre una vista por tabla para reducir ruido y trabajar por bloques.</p>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user-chip">
+          <span class="admin-user-avatar">AS</span>
+          <div>
+            <strong>AgusMA Team</strong>
+            <span>Administrador</span>
+          </div>
         </div>
+      </div>
+    </aside>
 
-        <nav class="admin-sidebar-nav">
-          <a class="admin-sidebar-link" href="#resumen" data-admin-nav>Resumen</a>
-          <a class="admin-sidebar-link" href="#crear-contenido" data-admin-nav>Crear contenido</a>
-          <a class="admin-sidebar-link" href="#categorias" data-admin-nav>Categorias</a>
-          <a class="admin-sidebar-link" href="#entidades" data-admin-nav>Entidades</a>
-          <a class="admin-sidebar-link" href="#colecciones" data-admin-nav>Colecciones</a>
-          <a class="admin-sidebar-link" href="#piezas" data-admin-nav>Piezas</a>
-          <a class="admin-sidebar-link" href="#multimedia" data-admin-nav>Multimedia</a>
-          <a class="admin-sidebar-link" href="../public/index.php">Ver web</a>
-        </nav>
-      </aside>
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="admin-topbar-title">
+          <button type="button" class="admin-icon-button" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <p>Panel administrativo</p>
+        </div>
+        <div class="admin-topbar-actions">
+          <a class="admin-icon-link" href="#crear-contenido" aria-label="Crear contenido"></a>
+          <a class="admin-icon-link" href="../public/index.php" aria-label="Ver sitio"></a>
+          <span class="admin-user-badge">AS</span>
+        </div>
+      </header>
 
-      <div class="admin-views">
+      <main class="admin-shell">
+        <?php if ($flashMessage !== ''): ?>
+          <p class="admin-flash"><?= adminEscape($flashMessage) ?></p>
+        <?php endif; ?>
+
+        <div class="admin-views">
         <section class="admin-panel" id="resumen" data-admin-panel>
           <div class="admin-section-title">
             <div>
@@ -276,354 +289,954 @@ $totalMedia = count($mediaItems);
         </section>
 
         <section class="admin-panel" id="categorias" data-admin-panel>
-          <div class="admin-section-title">
-            <h2>Categorias</h2>
-            <p><?= count($categories) ?> registradas</p>
-          </div>
-
-          <div class="admin-panel-toolbar">
-            <label class="admin-panel-search">
-              <span>Buscar</span>
-              <input type="search" placeholder="Nombre, slug o resumen" data-admin-search />
-            </label>
-            <label class="admin-panel-filter">
-              <span>Estado</span>
-              <select data-admin-status-filter>
-                <option value="all">Todos</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
-                <option value="featured">Destacadas</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="admin-list">
-            <?php foreach ($categories as $category): ?>
-              <form method="post" class="admin-item" data-admin-item>
-                <input type="hidden" name="action" value="update_category" />
-                <input type="hidden" name="id" value="<?= (int) $category['id'] ?>" />
-                <div class="admin-item-header">
-                  <div>
-                    <p class="admin-item-kicker">Categoria</p>
-                    <h3 class="admin-item-title"><?= adminEscape($category['name']) ?></h3>
-                  </div>
-                  <div class="admin-item-meta">
-                    <span><?= adminEscape($category['slug']) ?></span>
-                    <span><?= (int) $category['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
-                  </div>
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-master-detail-main">
+              <div class="admin-page-heading">
+                <div>
+                  <h2>Categorias</h2>
+                  <p>Gestiona las categorias que organizan tu contenido por orden, estado y estructura.</p>
                 </div>
-                <div class="admin-item-grid">
-                  <label>Nombre<input type="text" name="name" value="<?= adminEscape($category['name']) ?>" required /></label>
-                  <label>Slug<input type="text" name="slug" value="<?= adminEscape($category['slug']) ?>" required /></label>
-                  <label>Visual key<input type="text" name="visual_key" value="<?= adminEscape($category['visual_key']) ?>" required /></label>
-                  <label class="admin-field--wide">Resumen<input type="text" name="short_description" value="<?= adminEscape($category['short_description']) ?>" /></label>
-                  <label class="admin-field--wide">Descripcion<textarea name="description"><?= adminEscape($category['description']) ?></textarea></label>
-                  <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($category['cover_image']) ?>" /></label>
-                  <label>Hero image<input type="text" name="hero_image" value="<?= adminEscape($category['hero_image']) ?>" /></label>
-                  <label>Enlace<input type="text" name="link_url" value="<?= adminEscape($category['link_url']) ?>" /></label>
-                  <label>Orden<input type="number" name="display_order" value="<?= (int) $category['display_order'] ?>" min="0" /></label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($category['is_active']) ?> /> Activa</label>
-                  <div class="admin-actions">
-                    <button type="submit">Guardar</button>
-                    <button type="submit" name="submit_action" value="delete_category" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta categoria. Continuar?');">Eliminar</button>
-                  </div>
+                <span class="admin-page-count"><?= count($categories) ?> registradas</span>
+              </div>
+
+              <div class="admin-panel-toolbar">
+                <label class="admin-panel-search">
+                  <span>Buscar</span>
+                  <input type="search" placeholder="Buscar por nombre, slug o descripcion..." data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Estado</span>
+                  <select data-admin-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Activas</option>
+                    <option value="inactive">Inactivas</option>
+                    <option value="featured">Destacadas</option>
+                  </select>
+                </label>
+                <label class="admin-panel-filter admin-panel-filter--sort">
+                  <span>Orden</span>
+                  <select data-admin-sort>
+                    <option value="order-asc">Ascendente</option>
+                    <option value="order-desc">Descendente</option>
+                    <option value="name-asc">A-Z</option>
+                    <option value="name-desc">Z-A</option>
+                  </select>
+                </label>
+                <a class="admin-toolbar-cta" href="#crear-contenido">Nueva categoria</a>
+              </div>
+
+              <div class="admin-record-list admin-list">
+                <div class="admin-list-head" aria-hidden="true">
+                  <span>Categoria</span>
+                  <span>Slug</span>
+                  <span>Estado</span>
+                  <span>Orden</span>
+                  <span>Acciones</span>
                 </div>
-              </form>
-            <?php endforeach; ?>
+                <?php foreach ($categories as $category): ?>
+                  <?php $categorySummary = adminFirstNonEmpty([(string) $category['short_description'], (string) $category['description'], (string) $category['visual_key']], 'Sin resumen disponible.'); ?>
+                  <?php $categoryPreview = adminRecordPreviewImage($category, ['cover_image', 'hero_image']); ?>
+                  <button type="button" class="admin-item admin-item--category" data-admin-item data-admin-detail-trigger data-detail-id="category-<?= (int) $category['id'] ?>" data-active="<?= (int) $category['is_active'] ?>" data-featured="0" data-order="<?= (int) $category['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $category['name'])) ?>" aria-controls="detail-category-<?= (int) $category['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media<?= $categoryPreview === '' ? ' is-empty' : '' ?>">
+                        <?php if ($categoryPreview !== ''): ?>
+                          <img src="<?= adminEscape($categoryPreview) ?>" alt="<?= adminEscape($category['name']) ?>" loading="lazy" />
+                        <?php else: ?>
+                          <span><?= adminEscape(strtoupper(substr((string) $category['name'], 0, 1))) ?></span>
+                        <?php endif; ?>
+                      </span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker">Categoria</span>
+                        <span class="admin-item-title"><?= adminEscape($category['name']) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape($categorySummary) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell admin-item-cell--slug"><?= adminEscape($category['slug']) ?></span>
+                    <span class="admin-item-cell admin-item-cell--status"><span class="admin-status-badge"><?= (int) $category['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell admin-item-cell--order"><?= (int) $category['display_order'] ?></span>
+                    <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
+                  </button>
+                <?php endforeach; ?>
+                <p class="admin-no-results" data-admin-no-results hidden>No hay resultados con ese filtro.</p>
+                <p class="admin-list-foot">Mostrando 1 a <?= count($categories) ?> de <?= count($categories) ?> categorias</p>
+              </div>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona una categoria visible para ver sus detalles.</p>
+              <?php foreach ($categories as $category): ?>
+                <?php $categorySummary = adminFirstNonEmpty([(string) $category['short_description'], (string) $category['description'], (string) $category['visual_key']], 'Sin resumen disponible.'); ?>
+                <?php $categoryPreview = adminRecordPreviewImage($category, ['hero_image', 'cover_image']); ?>
+                <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="category-<?= (int) $category['id'] ?>" id="detail-category-<?= (int) $category['id'] ?>" hidden>
+                  <input type="hidden" name="action" value="update_category" />
+                  <input type="hidden" name="id" value="<?= (int) $category['id'] ?>" />
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de categoria</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero<?= $categoryPreview === '' ? ' is-empty' : '' ?>">
+                      <?php if ($categoryPreview !== ''): ?>
+                        <img src="<?= adminEscape($categoryPreview) ?>" alt="<?= adminEscape($category['name']) ?>" loading="lazy" />
+                      <?php else: ?>
+                        <span><?= adminEscape($category['visual_key']) ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar categoria</h3>
+                      <p>Actualiza la informacion y los assets de esta categoria.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $category['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip">Orden <?= (int) $category['display_order'] ?></span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Nombre</span><strong><?= adminEscape($category['name']) ?></strong></div>
+                        <div><span>Slug</span><strong><?= adminEscape($category['slug']) ?></strong></div>
+                        <div><span>Estado</span><strong class="admin-status-badge"><?= (int) $category['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></strong></div>
+                        <div><span>Orden</span><strong><?= (int) $category['display_order'] ?></strong></div>
+                        <div><span>Resumen / descripcion</span><strong><?= adminEscape($categorySummary) ?></strong></div>
+                        <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $category['updated_at'])) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
+                    </div>
+                    <div class="admin-detail-editor" data-admin-editable hidden>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Nombre<input type="text" name="name" value="<?= adminEscape($category['name']) ?>" required /></label>
+                        <label class="admin-detail-field">Slug<input type="text" name="slug" value="<?= adminEscape($category['slug']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Visual key<input type="text" name="visual_key" value="<?= adminEscape($category['visual_key']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Resumen<input type="text" name="short_description" value="<?= adminEscape($category['short_description']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Descripcion<textarea name="description"><?= adminEscape($category['description']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split admin-detail-editor-row--media">
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Cover image</span>
+                          <span class="admin-asset-preview<?= $category['cover_image'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($category, ['cover_image'])) ?>" alt="Preview cover image" data-admin-image-tag<?= $category['cover_image'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $category['cover_image'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar cover image">x</button>
+                          </span>
+                          <input type="text" name="cover_image" value="<?= adminEscape($category['cover_image']) ?>" data-admin-image-input />
+                        </label>
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Hero image</span>
+                          <span class="admin-asset-preview<?= $category['hero_image'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($category, ['hero_image'])) ?>" alt="Preview hero image" data-admin-image-tag<?= $category['hero_image'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $category['hero_image'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar hero image">x</button>
+                          </span>
+                          <input type="text" name="hero_image" value="<?= adminEscape($category['hero_image']) ?>" data-admin-image-input />
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Enlace<input type="text" name="link_url" value="<?= adminEscape($category['link_url']) ?>" /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $category['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-checkbox admin-checkbox--hint"><input type="checkbox" name="is_active" <?= adminChecked($category['is_active']) ?> /><span class="admin-checkbox-copy"><span>Activa</span><small class="admin-checkbox-hint">La categoria estara visible en el sitio.</small></span></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-actions admin-actions--editor">
+                        <button type="submit" class="admin-button admin-button--primary">Guardar cambios</button>
+                        <button type="button" class="admin-button admin-button--secondary" data-admin-cancel-edit>Cancelar</button>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <button type="submit" name="submit_action" value="delete_category" class="admin-button admin-button--danger admin-button--text" formnovalidate onclick="return confirm('Se eliminara esta categoria. Continuar?');">Eliminar categoria</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              <?php endforeach; ?>
+            </div>
           </div>
         </section>
 
         <section class="admin-panel" id="entidades" data-admin-panel>
-          <div class="admin-section-title">
-            <h2>Entidades</h2>
-            <p><?= count($entities) ?> registradas</p>
-          </div>
-
-          <div class="admin-panel-toolbar">
-            <label class="admin-panel-search">
-              <span>Buscar</span>
-              <input type="search" placeholder="Nombre, slug o tipo" data-admin-search />
-            </label>
-            <label class="admin-panel-filter">
-              <span>Estado</span>
-              <select data-admin-status-filter>
-                <option value="all">Todos</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
-                <option value="featured">Destacadas</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="admin-list">
-            <?php foreach ($entities as $entity): ?>
-              <form method="post" class="admin-item" data-admin-item>
-                <input type="hidden" name="action" value="update_entity" />
-                <input type="hidden" name="id" value="<?= (int) $entity['id'] ?>" />
-                <div class="admin-item-header">
-                  <div>
-                    <p class="admin-item-kicker">Entidad · <?= adminEscape((string) ($entity['category_name'] ?? 'Sin categoria')) ?></p>
-                    <h3 class="admin-item-title"><?= adminEscape($entity['name']) ?></h3>
-                  </div>
-                  <div class="admin-item-meta">
-                    <span><?= adminEscape($entity['slug']) ?></span>
-                    <span><?= adminEscape($entity['entity_type']) ?></span>
-                    <span><?= (int) $entity['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
-                  </div>
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-master-detail-main">
+              <div class="admin-page-heading">
+                <div>
+                  <h2>Entidades</h2>
+                  <p>Administra marcas, selecciones y universos editoriales.</p>
                 </div>
-                <div class="admin-item-grid">
-                  <label>Categoria
-                    <select name="category_id" required>
-                      <?php foreach ($categories as $category): ?>
-                        <option value="<?= (int) $category['id'] ?>" <?= adminSelected($entity['category_id'], $category['id']) ?>><?= adminEscape(adminCategoryLabel($category)) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </label>
-                  <label>Nombre<input type="text" name="name" value="<?= adminEscape($entity['name']) ?>" required /></label>
-                  <label>Slug<input type="text" name="slug" value="<?= adminEscape($entity['slug']) ?>" required /></label>
-                  <label>Entity type<input type="text" name="entity_type" value="<?= adminEscape($entity['entity_type']) ?>" required /></label>
-                  <label>Subtitle<input type="text" name="subtitle" value="<?= adminEscape($entity['subtitle']) ?>" /></label>
-                  <label class="admin-field--wide">Resumen<input type="text" name="short_description" value="<?= adminEscape($entity['short_description']) ?>" /></label>
-                  <label class="admin-field--wide">Descripcion<textarea name="description"><?= adminEscape($entity['description']) ?></textarea></label>
-                  <label>Logo URL<input type="text" name="logo_url" value="<?= adminEscape($entity['logo_url']) ?>" /></label>
-                  <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($entity['cover_image']) ?>" /></label>
-                  <label>Orden<input type="number" name="display_order" value="<?= (int) $entity['display_order'] ?>" min="0" /></label>
-                  <label>Primary color<input type="text" name="primary_color" value="<?= adminEscape($entity['primary_color']) ?>" /></label>
-                  <label>Secondary color<input type="text" name="secondary_color" value="<?= adminEscape($entity['secondary_color']) ?>" /></label>
-                  <label>Background color<input type="text" name="background_color" value="<?= adminEscape($entity['background_color']) ?>" /></label>
-                  <label>Text color<input type="text" name="text_color" value="<?= adminEscape($entity['text_color']) ?>" /></label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($entity['is_featured']) ?> /> Destacada</label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($entity['is_active']) ?> /> Activa</label>
-                  <div class="admin-actions">
-                    <button type="submit">Guardar</button>
-                    <button type="submit" name="submit_action" value="delete_entity" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta entidad. Continuar?');">Eliminar</button>
-                  </div>
+                <span class="admin-page-count"><?= count($entities) ?> registradas</span>
+              </div>
+
+              <div class="admin-panel-toolbar">
+                <label class="admin-panel-search">
+                  <span>Buscar</span>
+                  <input type="search" placeholder="Nombre, slug o tipo" data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Estado</span>
+                  <select data-admin-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Activas</option>
+                    <option value="inactive">Inactivas</option>
+                    <option value="featured">Destacadas</option>
+                  </select>
+                </label>
+                <label class="admin-panel-filter admin-panel-filter--sort">
+                  <span>Orden</span>
+                  <select data-admin-sort>
+                    <option value="order-asc">Ascendente</option>
+                    <option value="order-desc">Descendente</option>
+                    <option value="name-asc">A-Z</option>
+                    <option value="name-desc">Z-A</option>
+                  </select>
+                </label>
+                <a class="admin-toolbar-cta" href="#crear-contenido">Nueva entidad</a>
+              </div>
+
+              <div class="admin-record-list admin-list">
+                <div class="admin-list-head admin-list-head--wide" aria-hidden="true">
+                  <span>Entidad</span>
+                  <span>Slug</span>
+                  <span>Tipo</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
                 </div>
-              </form>
-            <?php endforeach; ?>
+                <?php foreach ($entities as $entity): ?>
+                  <?php $entitySummary = adminFirstNonEmpty([(string) $entity['short_description'], (string) $entity['subtitle'], (string) $entity['description']], 'Sin resumen disponible.'); ?>
+                  <?php $entityPreview = adminRecordPreviewImage($entity, ['cover_image', 'logo_url']); ?>
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="entity-<?= (int) $entity['id'] ?>" data-active="<?= (int) $entity['is_active'] ?>" data-featured="<?= (int) $entity['is_featured'] ?>" data-order="<?= (int) $entity['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $entity['name'])) ?>" aria-controls="detail-entity-<?= (int) $entity['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media<?= $entityPreview === '' ? ' is-empty' : '' ?>">
+                        <?php if ($entityPreview !== ''): ?>
+                          <img src="<?= adminEscape($entityPreview) ?>" alt="<?= adminEscape($entity['name']) ?>" loading="lazy" />
+                        <?php else: ?>
+                          <span><?= adminEscape(strtoupper(substr((string) $entity['name'], 0, 1))) ?></span>
+                        <?php endif; ?>
+                      </span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker">Entidad · <?= adminEscape((string) ($entity['category_name'] ?? 'Sin categoria')) ?></span>
+                        <span class="admin-item-title"><?= adminEscape($entity['name']) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape($entitySummary) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell"><?= adminEscape($entity['slug']) ?></span>
+                    <span class="admin-item-cell"><?= adminEscape($entity['entity_type']) ?></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $entity['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
+                  </button>
+                <?php endforeach; ?>
+                <p class="admin-no-results" data-admin-no-results hidden>No hay resultados con ese filtro.</p>
+                <p class="admin-list-foot">Mostrando 1 a <?= count($entities) ?> de <?= count($entities) ?> entidades</p>
+              </div>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona una entidad visible para ver sus detalles.</p>
+              <?php foreach ($entities as $entity): ?>
+                <?php $entitySummary = adminFirstNonEmpty([(string) $entity['short_description'], (string) $entity['subtitle'], (string) $entity['description']], 'Sin resumen disponible.'); ?>
+                <?php $entityPreview = adminRecordPreviewImage($entity, ['cover_image', 'logo_url']); ?>
+                <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="entity-<?= (int) $entity['id'] ?>" id="detail-entity-<?= (int) $entity['id'] ?>" hidden>
+                  <input type="hidden" name="action" value="update_entity" />
+                  <input type="hidden" name="id" value="<?= (int) $entity['id'] ?>" />
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de entidad</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero<?= $entityPreview === '' ? ' is-empty' : '' ?>">
+                      <?php if ($entityPreview !== ''): ?>
+                        <img src="<?= adminEscape($entityPreview) ?>" alt="<?= adminEscape($entity['name']) ?>" loading="lazy" />
+                      <?php else: ?>
+                        <span><?= adminEscape($entity['entity_type']) ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar entidad</h3>
+                      <p>Actualiza la informacion editorial y visual de esta entidad.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $entity['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip">Orden <?= (int) $entity['display_order'] ?></span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Nombre</span><strong><?= adminEscape($entity['name']) ?></strong></div>
+                        <div><span>Slug</span><strong><?= adminEscape($entity['slug']) ?></strong></div>
+                        <div><span>Tipo</span><strong><?= adminEscape($entity['entity_type']) ?></strong></div>
+                        <div><span>Categoria</span><strong><?= adminEscape((string) ($entity['category_name'] ?? 'Sin categoria')) ?></strong></div>
+                        <div><span>Resumen / descripcion</span><strong><?= adminEscape($entitySummary) ?></strong></div>
+                        <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $entity['updated_at'])) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
+                    </div>
+                    <div class="admin-detail-editor" data-admin-editable hidden>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Categoria
+                          <select name="category_id" required>
+                            <?php foreach ($categories as $category): ?>
+                              <option value="<?= (int) $category['id'] ?>" <?= adminSelected($entity['category_id'], $category['id']) ?>><?= adminEscape(adminCategoryLabel($category)) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                        <label class="admin-detail-field">Nombre<input type="text" name="name" value="<?= adminEscape($entity['name']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Slug<input type="text" name="slug" value="<?= adminEscape($entity['slug']) ?>" required /></label>
+                        <label class="admin-detail-field">Entity type<input type="text" name="entity_type" value="<?= adminEscape($entity['entity_type']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Subtitle<input type="text" name="subtitle" value="<?= adminEscape($entity['subtitle']) ?>" /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $entity['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Resumen<input type="text" name="short_description" value="<?= adminEscape($entity['short_description']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Descripcion<textarea name="description"><?= adminEscape($entity['description']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split admin-detail-editor-row--media">
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Logo URL</span>
+                          <span class="admin-asset-preview<?= $entity['logo_url'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($entity, ['logo_url'])) ?>" alt="Preview logo" data-admin-image-tag<?= $entity['logo_url'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $entity['logo_url'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar logo">x</button>
+                          </span>
+                          <input type="text" name="logo_url" value="<?= adminEscape($entity['logo_url']) ?>" data-admin-image-input />
+                        </label>
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Cover image</span>
+                          <span class="admin-asset-preview<?= $entity['cover_image'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($entity, ['cover_image'])) ?>" alt="Preview cover image" data-admin-image-tag<?= $entity['cover_image'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $entity['cover_image'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar cover image">x</button>
+                          </span>
+                          <input type="text" name="cover_image" value="<?= adminEscape($entity['cover_image']) ?>" data-admin-image-input />
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Primary color<input type="text" name="primary_color" value="<?= adminEscape($entity['primary_color']) ?>" /></label>
+                        <label class="admin-detail-field">Secondary color<input type="text" name="secondary_color" value="<?= adminEscape($entity['secondary_color']) ?>" /></label>
+                        <label class="admin-detail-field">Background color<input type="text" name="background_color" value="<?= adminEscape($entity['background_color']) ?>" /></label>
+                        <label class="admin-detail-field">Text color<input type="text" name="text_color" value="<?= adminEscape($entity['text_color']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($entity['is_featured']) ?> /> Destacada</label>
+                        <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($entity['is_active']) ?> /> Activa</label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-actions admin-actions--editor">
+                        <button type="submit" class="admin-button admin-button--primary">Guardar cambios</button>
+                        <button type="button" class="admin-button admin-button--secondary" data-admin-cancel-edit>Cancelar</button>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <button type="submit" name="submit_action" value="delete_entity" class="admin-button admin-button--danger admin-button--text" formnovalidate onclick="return confirm('Se eliminara esta entidad. Continuar?');">Eliminar entidad</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              <?php endforeach; ?>
+            </div>
           </div>
         </section>
 
         <section class="admin-panel" id="colecciones" data-admin-panel>
-          <div class="admin-section-title">
-            <h2>Colecciones</h2>
-            <p><?= count($collections) ?> registradas</p>
-          </div>
-
-          <div class="admin-panel-toolbar">
-            <label class="admin-panel-search">
-              <span>Buscar</span>
-              <input type="search" placeholder="Nombre, slug o entidad" data-admin-search />
-            </label>
-            <label class="admin-panel-filter">
-              <span>Estado</span>
-              <select data-admin-status-filter>
-                <option value="all">Todos</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
-                <option value="featured">Destacadas</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="admin-list">
-            <?php foreach ($collections as $collection): ?>
-              <form method="post" class="admin-item" data-admin-item>
-                <input type="hidden" name="action" value="update_collection" />
-                <input type="hidden" name="id" value="<?= (int) $collection['id'] ?>" />
-                <div class="admin-item-header">
-                  <div>
-                    <p class="admin-item-kicker">Coleccion · <?= adminEscape((string) ($collection['entity_name'] ?? 'Sin entidad')) ?></p>
-                    <h3 class="admin-item-title"><?= adminEscape($collection['name']) ?></h3>
-                  </div>
-                  <div class="admin-item-meta">
-                    <span><?= adminEscape($collection['slug']) ?></span>
-                    <?php if (!empty($collection['collection_year'])): ?>
-                      <span><?= (int) $collection['collection_year'] ?></span>
-                    <?php endif; ?>
-                    <span><?= (int) $collection['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
-                  </div>
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-master-detail-main">
+              <div class="admin-page-heading">
+                <div>
+                  <h2>Colecciones</h2>
+                  <p>Supervisa las colecciones publicadas o en desarrollo.</p>
                 </div>
-                <div class="admin-item-grid">
-                  <label>Entidad
-                    <select name="entity_id" required>
-                      <?php foreach ($entities as $entity): ?>
-                        <option value="<?= (int) $entity['id'] ?>" <?= adminSelected($collection['entity_id'], $entity['id']) ?>><?= adminEscape(adminEntityLabel($entity)) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </label>
-                  <label>Nombre<input type="text" name="name" value="<?= adminEscape($collection['name']) ?>" required /></label>
-                  <label>Slug<input type="text" name="slug" value="<?= adminEscape($collection['slug']) ?>" required /></label>
-                  <label>Subtitle<input type="text" name="subtitle" value="<?= adminEscape($collection['subtitle']) ?>" /></label>
-                  <label>Ano<input type="number" name="collection_year" value="<?= (int) $collection['collection_year'] ?>" min="1900" max="2100" /></label>
-                  <label>Season<input type="text" name="season" value="<?= adminEscape($collection['season']) ?>" /></label>
-                  <label class="admin-field--wide">Resumen<input type="text" name="short_description" value="<?= adminEscape($collection['short_description']) ?>" /></label>
-                  <label class="admin-field--wide">Descripcion<textarea name="description"><?= adminEscape($collection['description']) ?></textarea></label>
-                  <label class="admin-field--wide">Concept<textarea name="concept"><?= adminEscape($collection['concept']) ?></textarea></label>
-                  <label>Cover image<input type="text" name="cover_image" value="<?= adminEscape($collection['cover_image']) ?>" /></label>
-                  <label>Thumbnail image<input type="text" name="thumbnail_image" value="<?= adminEscape($collection['thumbnail_image']) ?>" /></label>
-                  <label>Published at<input type="datetime-local" name="published_at" value="<?= adminEscape(adminFormatDateTimeInput($collection['published_at'])) ?>" /></label>
-                  <label>Image variant<input type="text" name="image_variant" value="<?= adminEscape($collection['image_variant']) ?>" /></label>
-                  <label>Layout style<input type="text" name="layout_style" value="<?= adminEscape($collection['layout_style']) ?>" /></label>
-                  <label>Orden<input type="number" name="display_order" value="<?= (int) $collection['display_order'] ?>" min="0" /></label>
-                  <label>Primary color<input type="text" name="primary_color" value="<?= adminEscape($collection['primary_color']) ?>" /></label>
-                  <label>Secondary color<input type="text" name="secondary_color" value="<?= adminEscape($collection['secondary_color']) ?>" /></label>
-                  <label>Background color<input type="text" name="background_color" value="<?= adminEscape($collection['background_color']) ?>" /></label>
-                  <label>Text color<input type="text" name="text_color" value="<?= adminEscape($collection['text_color']) ?>" /></label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($collection['is_featured']) ?> /> Destacada</label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($collection['is_active']) ?> /> Activa</label>
-                  <div class="admin-actions">
-                    <button type="submit">Guardar</button>
-                    <button type="submit" name="submit_action" value="delete_collection" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta coleccion. Continuar?');">Eliminar</button>
-                  </div>
+                <span class="admin-page-count"><?= count($collections) ?> registradas</span>
+              </div>
+
+              <div class="admin-panel-toolbar">
+                <label class="admin-panel-search">
+                  <span>Buscar</span>
+                  <input type="search" placeholder="Nombre, slug o entidad" data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Estado</span>
+                  <select data-admin-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Activas</option>
+                    <option value="inactive">Inactivas</option>
+                    <option value="featured">Destacadas</option>
+                  </select>
+                </label>
+                <label class="admin-panel-filter admin-panel-filter--sort">
+                  <span>Orden</span>
+                  <select data-admin-sort>
+                    <option value="order-asc">Ascendente</option>
+                    <option value="order-desc">Descendente</option>
+                    <option value="name-asc">A-Z</option>
+                    <option value="name-desc">Z-A</option>
+                  </select>
+                </label>
+                <a class="admin-toolbar-cta" href="#crear-contenido">Nueva coleccion</a>
+              </div>
+
+              <div class="admin-record-list admin-list">
+                <div class="admin-list-head admin-list-head--wide" aria-hidden="true">
+                  <span>Coleccion</span>
+                  <span>Slug</span>
+                  <span>Ano</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
                 </div>
-              </form>
-            <?php endforeach; ?>
+                <?php foreach ($collections as $collection): ?>
+                  <?php $collectionSummary = adminFirstNonEmpty([(string) $collection['short_description'], (string) $collection['subtitle'], (string) $collection['description']], 'Sin resumen disponible.'); ?>
+                  <?php $collectionPreview = adminRecordPreviewImage($collection, ['thumbnail_image', 'cover_image']); ?>
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="collection-<?= (int) $collection['id'] ?>" data-active="<?= (int) $collection['is_active'] ?>" data-featured="<?= (int) $collection['is_featured'] ?>" data-order="<?= (int) $collection['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $collection['name'])) ?>" aria-controls="detail-collection-<?= (int) $collection['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media<?= $collectionPreview === '' ? ' is-empty' : '' ?>">
+                        <?php if ($collectionPreview !== ''): ?>
+                          <img src="<?= adminEscape($collectionPreview) ?>" alt="<?= adminEscape($collection['name']) ?>" loading="lazy" />
+                        <?php else: ?>
+                          <span><?= adminEscape(strtoupper(substr((string) $collection['name'], 0, 1))) ?></span>
+                        <?php endif; ?>
+                      </span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker">Coleccion · <?= adminEscape((string) ($collection['entity_name'] ?? 'Sin entidad')) ?></span>
+                        <span class="admin-item-title"><?= adminEscape($collection['name']) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape($collectionSummary) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell"><?= adminEscape($collection['slug']) ?></span>
+                    <span class="admin-item-cell"><?= !empty($collection['collection_year']) ? (int) $collection['collection_year'] : 'n/a' ?></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $collection['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
+                  </button>
+                <?php endforeach; ?>
+                <p class="admin-no-results" data-admin-no-results hidden>No hay resultados con ese filtro.</p>
+                <p class="admin-list-foot">Mostrando 1 a <?= count($collections) ?> de <?= count($collections) ?> colecciones</p>
+              </div>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona una coleccion visible para ver sus detalles.</p>
+              <?php foreach ($collections as $collection): ?>
+                <?php $collectionSummary = adminFirstNonEmpty([(string) $collection['short_description'], (string) $collection['subtitle'], (string) $collection['description']], 'Sin resumen disponible.'); ?>
+                <?php $collectionPreview = adminRecordPreviewImage($collection, ['cover_image', 'thumbnail_image']); ?>
+                <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="collection-<?= (int) $collection['id'] ?>" id="detail-collection-<?= (int) $collection['id'] ?>" hidden>
+                  <input type="hidden" name="action" value="update_collection" />
+                  <input type="hidden" name="id" value="<?= (int) $collection['id'] ?>" />
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de coleccion</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero<?= $collectionPreview === '' ? ' is-empty' : '' ?>">
+                      <?php if ($collectionPreview !== ''): ?>
+                        <img src="<?= adminEscape($collectionPreview) ?>" alt="<?= adminEscape($collection['name']) ?>" loading="lazy" />
+                      <?php else: ?>
+                        <span><?= adminEscape((string) ($collection['entity_name'] ?? 'Coleccion')) ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar coleccion</h3>
+                      <p>Actualiza el contenido, la narrativa y los assets de esta coleccion.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $collection['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip">Orden <?= (int) $collection['display_order'] ?></span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Nombre</span><strong><?= adminEscape($collection['name']) ?></strong></div>
+                        <div><span>Slug</span><strong><?= adminEscape($collection['slug']) ?></strong></div>
+                        <div><span>Entidad</span><strong><?= adminEscape((string) ($collection['entity_name'] ?? 'Sin entidad')) ?></strong></div>
+                        <div><span>Ano</span><strong><?= !empty($collection['collection_year']) ? (int) $collection['collection_year'] : 'n/a' ?></strong></div>
+                        <div><span>Resumen / descripcion</span><strong><?= adminEscape($collectionSummary) ?></strong></div>
+                        <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $collection['updated_at'])) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
+                    </div>
+                    <div class="admin-detail-editor" data-admin-editable hidden>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Entidad
+                          <select name="entity_id" required>
+                            <?php foreach ($entities as $entity): ?>
+                              <option value="<?= (int) $entity['id'] ?>" <?= adminSelected($collection['entity_id'], $entity['id']) ?>><?= adminEscape(adminEntityLabel($entity)) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                        <label class="admin-detail-field">Nombre<input type="text" name="name" value="<?= adminEscape($collection['name']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Slug<input type="text" name="slug" value="<?= adminEscape($collection['slug']) ?>" required /></label>
+                        <label class="admin-detail-field">Subtitle<input type="text" name="subtitle" value="<?= adminEscape($collection['subtitle']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field admin-detail-field--compact">Ano<input type="number" name="collection_year" value="<?= (int) $collection['collection_year'] ?>" min="1900" max="2100" /></label>
+                        <label class="admin-detail-field">Season<input type="text" name="season" value="<?= adminEscape($collection['season']) ?>" /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $collection['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Resumen<input type="text" name="short_description" value="<?= adminEscape($collection['short_description']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Descripcion<textarea name="description"><?= adminEscape($collection['description']) ?></textarea></label>
+                        <label class="admin-detail-field">Concept<textarea name="concept"><?= adminEscape($collection['concept']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split admin-detail-editor-row--media">
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Cover image</span>
+                          <span class="admin-asset-preview<?= $collection['cover_image'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($collection, ['cover_image'])) ?>" alt="Preview cover image" data-admin-image-tag<?= $collection['cover_image'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $collection['cover_image'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar cover image">x</button>
+                          </span>
+                          <input type="text" name="cover_image" value="<?= adminEscape($collection['cover_image']) ?>" data-admin-image-input />
+                        </label>
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Thumbnail image</span>
+                          <span class="admin-asset-preview<?= $collection['thumbnail_image'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($collection, ['thumbnail_image'])) ?>" alt="Preview thumbnail image" data-admin-image-tag<?= $collection['thumbnail_image'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $collection['thumbnail_image'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar thumbnail image">x</button>
+                          </span>
+                          <input type="text" name="thumbnail_image" value="<?= adminEscape($collection['thumbnail_image']) ?>" data-admin-image-input />
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Published at<input type="datetime-local" name="published_at" value="<?= adminEscape(adminFormatDateTimeInput($collection['published_at'])) ?>" /></label>
+                        <label class="admin-detail-field">Image variant<input type="text" name="image_variant" value="<?= adminEscape($collection['image_variant']) ?>" /></label>
+                        <label class="admin-detail-field">Layout style<input type="text" name="layout_style" value="<?= adminEscape($collection['layout_style']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Primary color<input type="text" name="primary_color" value="<?= adminEscape($collection['primary_color']) ?>" /></label>
+                        <label class="admin-detail-field">Secondary color<input type="text" name="secondary_color" value="<?= adminEscape($collection['secondary_color']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Background color<input type="text" name="background_color" value="<?= adminEscape($collection['background_color']) ?>" /></label>
+                        <label class="admin-detail-field">Text color<input type="text" name="text_color" value="<?= adminEscape($collection['text_color']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($collection['is_featured']) ?> /> Destacada</label>
+                        <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($collection['is_active']) ?> /> Activa</label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-actions admin-actions--editor">
+                        <button type="submit" class="admin-button admin-button--primary">Guardar cambios</button>
+                        <button type="button" class="admin-button admin-button--secondary" data-admin-cancel-edit>Cancelar</button>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <button type="submit" name="submit_action" value="delete_collection" class="admin-button admin-button--danger admin-button--text" formnovalidate onclick="return confirm('Se eliminara esta coleccion. Continuar?');">Eliminar coleccion</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              <?php endforeach; ?>
+            </div>
           </div>
         </section>
 
         <section class="admin-panel" id="piezas" data-admin-panel>
-          <div class="admin-section-title">
-            <h2>Piezas</h2>
-            <p><?= count($pieces) ?> registradas</p>
-          </div>
-
-          <div class="admin-panel-toolbar">
-            <label class="admin-panel-search">
-              <span>Buscar</span>
-              <input type="search" placeholder="Nombre, slug o coleccion" data-admin-search />
-            </label>
-            <label class="admin-panel-filter">
-              <span>Estado</span>
-              <select data-admin-status-filter>
-                <option value="all">Todos</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
-                <option value="featured">Destacadas</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="admin-list">
-            <?php foreach ($pieces as $piece): ?>
-              <form method="post" class="admin-item" data-admin-item>
-                <input type="hidden" name="action" value="update_piece" />
-                <input type="hidden" name="id" value="<?= (int) $piece['id'] ?>" />
-                <div class="admin-item-header">
-                  <div>
-                    <p class="admin-item-kicker">Pieza · <?= adminEscape((string) ($piece['collection_name'] ?? 'Sin coleccion')) ?></p>
-                    <h3 class="admin-item-title"><?= adminEscape($piece['name']) ?></h3>
-                  </div>
-                  <div class="admin-item-meta">
-                    <span><?= adminEscape($piece['slug']) ?></span>
-                    <span><?= adminEscape($piece['piece_type']) ?></span>
-                    <span><?= (int) $piece['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
-                  </div>
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-master-detail-main">
+              <div class="admin-page-heading">
+                <div>
+                  <h2>Piezas</h2>
+                  <p>Controla las piezas individuales de cada coleccion.</p>
                 </div>
-                <div class="admin-item-grid">
-                  <label>Coleccion
-                    <select name="collection_id" required>
-                      <?php foreach ($collections as $collection): ?>
-                        <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($piece['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </label>
-                  <label>Nombre<input type="text" name="name" value="<?= adminEscape($piece['name']) ?>" required /></label>
-                  <label>Slug<input type="text" name="slug" value="<?= adminEscape($piece['slug']) ?>" required /></label>
-                  <label>Piece type<input type="text" name="piece_type" value="<?= adminEscape($piece['piece_type']) ?>" required /></label>
-                  <label>Subtitle<input type="text" name="subtitle" value="<?= adminEscape($piece['subtitle']) ?>" /></label>
-                  <label>Orden<input type="number" name="display_order" value="<?= (int) $piece['display_order'] ?>" min="0" /></label>
-                  <label class="admin-field--wide">Resumen<input type="text" name="short_description" value="<?= adminEscape($piece['short_description']) ?>" /></label>
-                  <label class="admin-field--wide">Descripcion<textarea name="description"><?= adminEscape($piece['description']) ?></textarea></label>
-                  <label class="admin-field--wide">Cover image<input type="text" name="cover_image" value="<?= adminEscape($piece['cover_image']) ?>" /></label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($piece['is_featured']) ?> /> Destacada</label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($piece['is_active']) ?> /> Activa</label>
-                  <div class="admin-actions">
-                    <button type="submit">Guardar</button>
-                    <button type="submit" name="submit_action" value="delete_piece" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara esta pieza. Continuar?');">Eliminar</button>
-                  </div>
+                <span class="admin-page-count"><?= count($pieces) ?> registradas</span>
+              </div>
+
+              <div class="admin-panel-toolbar">
+                <label class="admin-panel-search">
+                  <span>Buscar</span>
+                  <input type="search" placeholder="Nombre, slug o coleccion" data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Estado</span>
+                  <select data-admin-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Activas</option>
+                    <option value="inactive">Inactivas</option>
+                    <option value="featured">Destacadas</option>
+                  </select>
+                </label>
+                <label class="admin-panel-filter admin-panel-filter--sort">
+                  <span>Orden</span>
+                  <select data-admin-sort>
+                    <option value="order-asc">Ascendente</option>
+                    <option value="order-desc">Descendente</option>
+                    <option value="name-asc">A-Z</option>
+                    <option value="name-desc">Z-A</option>
+                  </select>
+                </label>
+                <a class="admin-toolbar-cta" href="#crear-contenido">Nueva pieza</a>
+              </div>
+
+              <div class="admin-record-list admin-list">
+                <div class="admin-list-head admin-list-head--wide" aria-hidden="true">
+                  <span>Pieza</span>
+                  <span>Slug</span>
+                  <span>Tipo</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
                 </div>
-              </form>
-            <?php endforeach; ?>
+                <?php foreach ($pieces as $piece): ?>
+                  <?php $pieceSummary = adminFirstNonEmpty([(string) $piece['short_description'], (string) $piece['subtitle'], (string) $piece['description']], 'Sin resumen disponible.'); ?>
+                  <?php $piecePreview = adminRecordPreviewImage($piece, ['cover_image']); ?>
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="piece-<?= (int) $piece['id'] ?>" data-active="<?= (int) $piece['is_active'] ?>" data-featured="<?= (int) $piece['is_featured'] ?>" data-order="<?= (int) $piece['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $piece['name'])) ?>" aria-controls="detail-piece-<?= (int) $piece['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media<?= $piecePreview === '' ? ' is-empty' : '' ?>">
+                        <?php if ($piecePreview !== ''): ?>
+                          <img src="<?= adminEscape($piecePreview) ?>" alt="<?= adminEscape($piece['name']) ?>" loading="lazy" />
+                        <?php else: ?>
+                          <span><?= adminEscape(strtoupper(substr((string) $piece['name'], 0, 1))) ?></span>
+                        <?php endif; ?>
+                      </span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker">Pieza · <?= adminEscape((string) ($piece['collection_name'] ?? 'Sin coleccion')) ?></span>
+                        <span class="admin-item-title"><?= adminEscape($piece['name']) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape($pieceSummary) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell"><?= adminEscape($piece['slug']) ?></span>
+                    <span class="admin-item-cell"><?= adminEscape($piece['piece_type']) ?></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $piece['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
+                  </button>
+                <?php endforeach; ?>
+                <p class="admin-no-results" data-admin-no-results hidden>No hay resultados con ese filtro.</p>
+                <p class="admin-list-foot">Mostrando 1 a <?= count($pieces) ?> de <?= count($pieces) ?> piezas</p>
+              </div>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona una pieza visible para ver sus detalles.</p>
+              <?php foreach ($pieces as $piece): ?>
+                <?php $pieceSummary = adminFirstNonEmpty([(string) $piece['short_description'], (string) $piece['subtitle'], (string) $piece['description']], 'Sin resumen disponible.'); ?>
+                <?php $piecePreview = adminRecordPreviewImage($piece, ['cover_image']); ?>
+                <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="piece-<?= (int) $piece['id'] ?>" id="detail-piece-<?= (int) $piece['id'] ?>" hidden>
+                  <input type="hidden" name="action" value="update_piece" />
+                  <input type="hidden" name="id" value="<?= (int) $piece['id'] ?>" />
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de pieza</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero<?= $piecePreview === '' ? ' is-empty' : '' ?>">
+                      <?php if ($piecePreview !== ''): ?>
+                        <img src="<?= adminEscape($piecePreview) ?>" alt="<?= adminEscape($piece['name']) ?>" loading="lazy" />
+                      <?php else: ?>
+                        <span><?= adminEscape($piece['piece_type']) ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar pieza</h3>
+                      <p>Actualiza la informacion principal y los recursos de esta pieza.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $piece['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip">Orden <?= (int) $piece['display_order'] ?></span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Nombre</span><strong><?= adminEscape($piece['name']) ?></strong></div>
+                        <div><span>Slug</span><strong><?= adminEscape($piece['slug']) ?></strong></div>
+                        <div><span>Tipo</span><strong><?= adminEscape($piece['piece_type']) ?></strong></div>
+                        <div><span>Coleccion</span><strong><?= adminEscape((string) ($piece['collection_name'] ?? 'Sin coleccion')) ?></strong></div>
+                        <div><span>Resumen / descripcion</span><strong><?= adminEscape($pieceSummary) ?></strong></div>
+                        <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $piece['updated_at'])) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
+                    </div>
+                    <div class="admin-detail-editor" data-admin-editable hidden>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Coleccion
+                          <select name="collection_id" required>
+                            <?php foreach ($collections as $collection): ?>
+                              <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($piece['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                        <label class="admin-detail-field">Nombre<input type="text" name="name" value="<?= adminEscape($piece['name']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Slug<input type="text" name="slug" value="<?= adminEscape($piece['slug']) ?>" required /></label>
+                        <label class="admin-detail-field">Piece type<input type="text" name="piece_type" value="<?= adminEscape($piece['piece_type']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Subtitle<input type="text" name="subtitle" value="<?= adminEscape($piece['subtitle']) ?>" /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $piece['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Resumen<input type="text" name="short_description" value="<?= adminEscape($piece['short_description']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Descripcion<textarea name="description"><?= adminEscape($piece['description']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--media">
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Cover image</span>
+                          <span class="admin-asset-preview admin-asset-preview--wide<?= $piece['cover_image'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($piece, ['cover_image'])) ?>" alt="Preview cover image" data-admin-image-tag<?= $piece['cover_image'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $piece['cover_image'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar cover image">x</button>
+                          </span>
+                          <input type="text" name="cover_image" value="<?= adminEscape($piece['cover_image']) ?>" data-admin-image-input />
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-checkbox"><input type="checkbox" name="is_featured" <?= adminChecked($piece['is_featured']) ?> /> Destacada</label>
+                        <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($piece['is_active']) ?> /> Activa</label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-actions admin-actions--editor">
+                        <button type="submit" class="admin-button admin-button--primary">Guardar cambios</button>
+                        <button type="button" class="admin-button admin-button--secondary" data-admin-cancel-edit>Cancelar</button>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <button type="submit" name="submit_action" value="delete_piece" class="admin-button admin-button--danger admin-button--text" formnovalidate onclick="return confirm('Se eliminara esta pieza. Continuar?');">Eliminar pieza</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              <?php endforeach; ?>
+            </div>
           </div>
         </section>
 
         <section class="admin-panel" id="multimedia" data-admin-panel>
-          <div class="admin-section-title">
-            <h2>Multimedia</h2>
-            <p><?= count($mediaItems) ?> registradas</p>
-          </div>
-
-          <div class="admin-panel-toolbar">
-            <label class="admin-panel-search">
-              <span>Buscar</span>
-              <input type="search" placeholder="Titulo, ruta o coleccion" data-admin-search />
-            </label>
-            <label class="admin-panel-filter">
-              <span>Estado</span>
-              <select data-admin-status-filter>
-                <option value="all">Todos</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
-                <option value="featured">Destacadas</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="admin-list">
-            <?php foreach ($mediaItems as $media): ?>
-              <form method="post" class="admin-item" data-admin-item>
-                <input type="hidden" name="action" value="update_media" />
-                <input type="hidden" name="id" value="<?= (int) $media['id'] ?>" />
-                <div class="admin-item-header">
-                  <div>
-                    <p class="admin-item-kicker">Multimedia · <?= adminEscape((string) ($media['collection_name'] ?? 'Sin coleccion')) ?></p>
-                    <h3 class="admin-item-title"><?= adminEscape((string) ($media['title'] ?: $media['file_url'])) ?></h3>
-                  </div>
-                  <div class="admin-item-meta">
-                    <span><?= adminEscape($media['media_type']) ?></span>
-                    <span><?= (int) $media['is_cover'] === 1 ? 'Portada' : 'Recurso' ?></span>
-                    <span><?= (int) $media['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
-                  </div>
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-master-detail-main">
+              <div class="admin-page-heading">
+                <div>
+                  <h2>Multimedia</h2>
+                  <p>Relaciona imagenes y recursos con colecciones y piezas.</p>
                 </div>
-                <div class="admin-item-grid">
-                  <label>Coleccion
-                    <select name="collection_id" required>
-                      <?php foreach ($collections as $collection): ?>
-                        <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($media['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </label>
-                  <label>Pieza opcional
-                    <select name="piece_id">
-                      <option value="">Multimedia general de la coleccion</option>
-                      <?php foreach ($pieces as $piece): ?>
-                        <option value="<?= (int) $piece['id'] ?>" <?= adminSelected($media['piece_id'], $piece['id']) ?>><?= adminEscape(adminPieceLabel($piece)) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </label>
-                  <label>Media type<input type="text" name="media_type" value="<?= adminEscape($media['media_type']) ?>" required /></label>
-                  <label class="admin-field--wide">File URL / ruta<input type="text" name="file_url" value="<?= adminEscape($media['file_url']) ?>" required /></label>
-                  <label>Thumbnail URL<input type="text" name="thumbnail_url" value="<?= adminEscape($media['thumbnail_url']) ?>" /></label>
-                  <label>Titulo<input type="text" name="title" value="<?= adminEscape($media['title']) ?>" /></label>
-                  <label>Alt text<input type="text" name="alt_text" value="<?= adminEscape($media['alt_text']) ?>" /></label>
-                  <label>Section key<input type="text" name="section_key" value="<?= adminEscape($media['section_key']) ?>" /></label>
-                  <label>Orden<input type="number" name="display_order" value="<?= (int) $media['display_order'] ?>" min="0" /></label>
-                  <label class="admin-field--wide">Caption<textarea name="caption"><?= adminEscape($media['caption']) ?></textarea></label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_cover" <?= adminChecked($media['is_cover']) ?> /> Portada</label>
-                  <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($media['is_active']) ?> /> Activa</label>
-                  <div class="admin-actions">
-                    <button type="submit">Guardar</button>
-                    <button type="submit" name="submit_action" value="delete_media" class="admin-button admin-button--danger" formnovalidate onclick="return confirm('Se eliminara este elemento multimedia. Continuar?');">Eliminar</button>
-                  </div>
+                <span class="admin-page-count"><?= count($mediaItems) ?> registradas</span>
+              </div>
+
+              <div class="admin-panel-toolbar">
+                <label class="admin-panel-search">
+                  <span>Buscar</span>
+                  <input type="search" placeholder="Titulo, ruta o coleccion" data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Estado</span>
+                  <select data-admin-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Activas</option>
+                    <option value="inactive">Inactivas</option>
+                    <option value="featured">Destacadas</option>
+                  </select>
+                </label>
+                <label class="admin-panel-filter admin-panel-filter--sort">
+                  <span>Orden</span>
+                  <select data-admin-sort>
+                    <option value="order-asc">Ascendente</option>
+                    <option value="order-desc">Descendente</option>
+                    <option value="name-asc">A-Z</option>
+                    <option value="name-desc">Z-A</option>
+                  </select>
+                </label>
+                <a class="admin-toolbar-cta" href="#crear-contenido">Nuevo recurso</a>
+              </div>
+
+              <div class="admin-record-list admin-list">
+                <div class="admin-list-head admin-list-head--wide" aria-hidden="true">
+                  <span>Recurso</span>
+                  <span>Tipo</span>
+                  <span>Scope</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
                 </div>
-              </form>
-            <?php endforeach; ?>
+                <?php foreach ($mediaItems as $media): ?>
+                  <?php $mediaSummary = adminFirstNonEmpty([(string) $media['caption'], (string) $media['alt_text'], (string) $media['file_url']], 'Sin resumen disponible.'); ?>
+                  <?php $mediaPreview = adminRecordPreviewImage($media, ['thumbnail_url', 'file_url']); ?>
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="media-<?= (int) $media['id'] ?>" data-active="<?= (int) $media['is_active'] ?>" data-featured="<?= (int) $media['is_cover'] ?>" data-order="<?= (int) $media['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) ($media['title'] ?: $media['file_url']))) ?>" aria-controls="detail-media-<?= (int) $media['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media<?= $mediaPreview === '' ? ' is-empty' : '' ?>">
+                        <?php if ($mediaPreview !== ''): ?>
+                          <img src="<?= adminEscape($mediaPreview) ?>" alt="<?= adminEscape((string) ($media['title'] ?: $media['alt_text'] ?: 'Multimedia')) ?>" loading="lazy" />
+                        <?php else: ?>
+                          <span><?= adminEscape(strtoupper(substr((string) ($media['media_type'] ?: 'M'), 0, 1))) ?></span>
+                        <?php endif; ?>
+                      </span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker">Multimedia · <?= adminEscape((string) ($media['collection_name'] ?? 'Sin coleccion')) ?></span>
+                        <span class="admin-item-title"><?= adminEscape((string) ($media['title'] ?: $media['file_url'])) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape($mediaSummary) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell"><?= adminEscape($media['media_type']) ?></span>
+                    <span class="admin-item-cell"><?= adminEscape((string) ($media['piece_name'] ?? 'Coleccion')) ?></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $media['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
+                  </button>
+                <?php endforeach; ?>
+                <p class="admin-no-results" data-admin-no-results hidden>No hay resultados con ese filtro.</p>
+                <p class="admin-list-foot">Mostrando 1 a <?= count($mediaItems) ?> de <?= count($mediaItems) ?> recursos</p>
+              </div>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona un recurso visible para ver sus detalles.</p>
+              <?php foreach ($mediaItems as $media): ?>
+                <?php $mediaSummary = adminFirstNonEmpty([(string) $media['caption'], (string) $media['alt_text'], (string) $media['file_url']], 'Sin resumen disponible.'); ?>
+                <?php $mediaPreview = adminRecordPreviewImage($media, ['file_url', 'thumbnail_url']); ?>
+                <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="media-<?= (int) $media['id'] ?>" id="detail-media-<?= (int) $media['id'] ?>" hidden>
+                  <input type="hidden" name="action" value="update_media" />
+                  <input type="hidden" name="id" value="<?= (int) $media['id'] ?>" />
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de multimedia</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero<?= $mediaPreview === '' ? ' is-empty' : '' ?>">
+                      <?php if ($mediaPreview !== ''): ?>
+                        <img src="<?= adminEscape($mediaPreview) ?>" alt="<?= adminEscape((string) ($media['title'] ?: $media['alt_text'] ?: 'Multimedia')) ?>" loading="lazy" />
+                      <?php else: ?>
+                        <span><?= adminEscape($media['media_type']) ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar recurso</h3>
+                      <p>Actualiza el archivo, el contexto y los metadatos de este recurso.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $media['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip">Orden <?= (int) $media['display_order'] ?></span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Titulo</span><strong><?= adminEscape((string) ($media['title'] ?: $media['file_url'])) ?></strong></div>
+                        <div><span>Tipo</span><strong><?= adminEscape($media['media_type']) ?></strong></div>
+                        <div><span>Coleccion</span><strong><?= adminEscape((string) ($media['collection_name'] ?? 'Sin coleccion')) ?></strong></div>
+                        <div><span>Scope</span><strong><?= adminEscape((string) ($media['piece_name'] ?? 'Coleccion')) ?></strong></div>
+                        <div><span>Resumen / descripcion</span><strong><?= adminEscape($mediaSummary) ?></strong></div>
+                        <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $media['updated_at'])) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
+                    </div>
+                    <div class="admin-detail-editor" data-admin-editable hidden>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Coleccion
+                          <select name="collection_id" required>
+                            <?php foreach ($collections as $collection): ?>
+                              <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($media['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                        <label class="admin-detail-field">Pieza opcional
+                          <select name="piece_id">
+                            <option value="">Multimedia general de la coleccion</option>
+                            <?php foreach ($pieces as $piece): ?>
+                              <option value="<?= (int) $piece['id'] ?>" <?= adminSelected($media['piece_id'], $piece['id']) ?>><?= adminEscape(adminPieceLabel($piece)) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Media type<input type="text" name="media_type" value="<?= adminEscape($media['media_type']) ?>" required /></label>
+                        <label class="admin-detail-field">Titulo<input type="text" name="title" value="<?= adminEscape($media['title']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Alt text<input type="text" name="alt_text" value="<?= adminEscape($media['alt_text']) ?>" /></label>
+                        <label class="admin-detail-field">Section key<input type="text" name="section_key" value="<?= adminEscape($media['section_key']) ?>" /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $media['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split admin-detail-editor-row--media">
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>File URL / ruta</span>
+                          <span class="admin-asset-preview admin-asset-preview--wide<?= $media['file_url'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($media, ['file_url'])) ?>" alt="Preview file URL" data-admin-image-tag<?= $media['file_url'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $media['file_url'] !== '' ? ' hidden' : '' ?>>Sin preview</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar file URL">x</button>
+                          </span>
+                          <input type="text" name="file_url" value="<?= adminEscape($media['file_url']) ?>" data-admin-image-input required />
+                        </label>
+                        <label class="admin-asset-field admin-detail-field" data-admin-image-field>
+                          <span>Thumbnail URL</span>
+                          <span class="admin-asset-preview<?= $media['thumbnail_url'] === '' ? ' is-empty' : '' ?>" data-admin-image-preview>
+                            <img src="<?= adminEscape(adminRecordPreviewImage($media, ['thumbnail_url'])) ?>" alt="Preview thumbnail URL" data-admin-image-tag<?= $media['thumbnail_url'] === '' ? ' hidden' : '' ?> loading="lazy" />
+                            <span class="admin-asset-placeholder"<?= $media['thumbnail_url'] !== '' ? ' hidden' : '' ?>>Sin imagen</span>
+                          </span>
+                          <span class="admin-asset-actions">
+                            <button type="button" class="admin-asset-action" data-admin-image-browse>Cambiar</button>
+                            <button type="button" class="admin-asset-action admin-asset-action--icon" data-admin-image-clear aria-label="Limpiar thumbnail URL">x</button>
+                          </span>
+                          <input type="text" name="thumbnail_url" value="<?= adminEscape($media['thumbnail_url']) ?>" data-admin-image-input />
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Caption<textarea name="caption"><?= adminEscape($media['caption']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-checkbox"><input type="checkbox" name="is_cover" <?= adminChecked($media['is_cover']) ?> /> Portada</label>
+                        <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($media['is_active']) ?> /> Activa</label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-actions admin-actions--editor">
+                        <button type="submit" class="admin-button admin-button--primary">Guardar cambios</button>
+                        <button type="button" class="admin-button admin-button--secondary" data-admin-cancel-edit>Cancelar</button>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <button type="submit" name="submit_action" value="delete_media" class="admin-button admin-button--danger admin-button--text" formnovalidate onclick="return confirm('Se eliminara este elemento multimedia. Continuar?');">Eliminar recurso</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              <?php endforeach; ?>
+            </div>
           </div>
         </section>
-      </div>
+        </div>
+      </main>
     </div>
-  </main>
+  </div>
   <script type="module" src="../public/js/admin.js"></script>
 </body>
 </html>

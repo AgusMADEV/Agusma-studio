@@ -16,7 +16,8 @@ function adminLegacyFeaturedCount(PDO $connection): int
 function adminLoadDashboardData(PDO $connection): array
 {
     $categories = $connection->query(
-        "SELECT id, name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active
+        "SELECT id, name, slug, short_description, description, visual_key, cover_image, hero_image, link_url, display_order, is_active,
+                created_at, updated_at
         FROM categories
         WHERE slug <> 'national-teams'
         ORDER BY display_order ASC, id ASC"
@@ -25,7 +26,8 @@ function adminLoadDashboardData(PDO $connection): array
     $entities = $connection->query(
         "SELECT e.id, e.category_id, e.name, e.slug, e.entity_type, e.subtitle, e.short_description, e.description,
                 e.logo_url, e.cover_image, e.primary_color, e.secondary_color, e.background_color, e.text_color,
-                e.display_order, e.is_featured, e.is_active, c.name AS category_name, c.slug AS category_slug
+                e.display_order, e.is_featured, e.is_active, e.created_at, e.updated_at,
+                c.name AS category_name, c.slug AS category_slug
         FROM entities e
         INNER JOIN categories c ON c.id = e.category_id
         ORDER BY c.display_order ASC, e.display_order ASC, e.id ASC"
@@ -35,7 +37,8 @@ function adminLoadDashboardData(PDO $connection): array
         "SELECT col.id, col.entity_id, col.name, col.slug, col.subtitle, col.collection_year, col.season,
                 col.short_description, col.description, col.concept, col.cover_image, col.thumbnail_image,
                 col.primary_color, col.secondary_color, col.background_color, col.text_color, col.image_variant,
-                col.layout_style, col.display_order, col.is_featured, col.is_active, col.published_at,
+            col.layout_style, col.display_order, col.is_featured, col.is_active, col.published_at,
+            col.created_at, col.updated_at,
                 e.name AS entity_name, e.slug AS entity_slug, e.entity_type, c.name AS category_name, c.slug AS category_slug
         FROM collections col
         INNER JOIN entities e ON e.id = col.entity_id
@@ -45,7 +48,7 @@ function adminLoadDashboardData(PDO $connection): array
 
     $pieces = $connection->query(
         "SELECT p.id, p.collection_id, p.name, p.slug, p.piece_type, p.subtitle, p.short_description, p.description,
-                p.cover_image, p.display_order, p.is_featured, p.is_active,
+            p.cover_image, p.display_order, p.is_featured, p.is_active, p.created_at, p.updated_at,
                 col.name AS collection_name, e.name AS entity_name, c.name AS category_name
         FROM pieces p
         INNER JOIN collections col ON col.id = p.collection_id
@@ -56,7 +59,7 @@ function adminLoadDashboardData(PDO $connection): array
 
     $mediaItems = $connection->query(
         "SELECT m.id, m.collection_id, m.piece_id, m.media_type, m.file_url, m.thumbnail_url, m.title, m.alt_text,
-                m.caption, m.section_key, m.display_order, m.is_cover, m.is_active,
+            m.caption, m.section_key, m.display_order, m.is_cover, m.is_active, m.created_at, m.updated_at,
                 col.name AS collection_name, p.name AS piece_name
         FROM media m
         INNER JOIN collections col ON col.id = m.collection_id
