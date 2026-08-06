@@ -3,10 +3,18 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/config/database.php';
+require_once __DIR__ . '/section-settings.php';
 
-function adminRedirect(string $message): never
+function adminRedirect(string $message, string $view = 'crear-contenido', ?string $detailId = null): never
 {
-    header('Location: ?message=' . urlencode($message) . '#crear-contenido');
+    $safeView = preg_match('/^[a-z0-9-]+$/', $view) === 1 ? $view : 'crear-contenido';
+    $query = ['message' => $message];
+
+    if ($detailId !== null && preg_match('/^[a-z0-9-]+$/', $detailId) === 1) {
+        $query['detail'] = $detailId;
+    }
+
+    header('Location: ?' . http_build_query($query) . '#' . $safeView);
     exit;
 }
 

@@ -319,6 +319,53 @@ function contentFetchCollectionTags(PDO $connection, int $collectionId): array
     return $statement->fetchAll();
 }
 
+function contentFetchCollectionSections(PDO $connection, int $collectionId, bool $activeOnly = true): array
+{
+    $sql = 'SELECT
+            id,
+            collection_id,
+            section_key,
+            section_type,
+            eyebrow,
+            title,
+            body,
+            settings_json,
+            display_order,
+            is_active
+        FROM collection_sections
+        WHERE collection_id = :collection_id';
+
+    if ($activeOnly) {
+        $sql .= ' AND is_active = 1';
+    }
+
+    $sql .= ' ORDER BY display_order ASC, id ASC';
+
+    $statement = $connection->prepare($sql);
+    $statement->execute([':collection_id' => $collectionId]);
+
+    $sections = $statement->fetchAll();
+
+    foreach ($sections as &$section) {
+        $decodedSettings = [];
+        $rawSettings = $section['settings_json'] ?? null;
+
+        if (is_string($rawSettings) && trim($rawSettings) !== '') {
+            $decoded = json_decode($rawSettings, true);
+
+            if (is_array($decoded)) {
+                $decodedSettings = $decoded;
+            }
+        }
+
+        $section['settings'] = $decodedSettings;
+        unset($section['settings_json']);
+    }
+    unset($section);
+
+    return $sections;
+}
+
 function contentFetchCollectionDetail(PDO $connection, string $categorySlug, string $entitySlug, string $collectionSlug, bool $activeOnly = true): ?array
 {
     $collection = contentFetchCollectionRecord($connection, $categorySlug, $entitySlug, $collectionSlug, $activeOnly);
@@ -330,6 +377,7 @@ function contentFetchCollectionDetail(PDO $connection, string $categorySlug, str
     $pieces = contentFetchPiecesForCollection($connection, (int) $collection['id'], $activeOnly);
     $media = contentFetchCollectionMedia($connection, (int) $collection['id'], $activeOnly);
     $tags = contentFetchCollectionTags($connection, (int) $collection['id']);
+    $sections = contentFetchCollectionSections($connection, (int) $collection['id'], $activeOnly);
     $mediaByPiece = [];
     $generalMedia = [];
 
@@ -403,6 +451,7 @@ function contentFetchCollectionDetail(PDO $connection, string $categorySlug, str
         'media' => $generalMedia,
         'media_by_piece' => $mediaByPiece,
         'tags' => $tags,
+        'sections' => $sections,
     ];
 }
 

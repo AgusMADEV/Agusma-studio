@@ -93,12 +93,20 @@ function resetDetailPanel(detailPanel, resetForm = false) {
     return;
   }
 
-  if (resetForm && typeof detailPanel.reset === "function") {
-    detailPanel.reset();
+  if (resetForm) {
+    if (typeof detailPanel.reset === "function") {
+      detailPanel.reset();
+    } else {
+      Array.from(detailPanel.querySelectorAll("form")).forEach((form) => form.reset());
+    }
   }
 
   setDetailMode(detailPanel, "view");
   syncImagePreviews(detailPanel);
+  syncSectionVisualSettings(detailPanel);
+  Array.from(detailPanel.querySelectorAll("form")).forEach((form) => {
+    syncMediaRelationForm(form);
+  });
 }
 
 function setImageFieldState(field, source) {
@@ -169,6 +177,121 @@ function bindImageFields() {
   });
 }
 
+function syncMediaRelationForm(form) {
+  const collectionSelect = form.querySelector("[data-admin-media-collection]");
+
+  if (!collectionSelect) {
+    return;
+  }
+
+  const collectionId = collectionSelect.value;
+  const relatedSelects = [
+    form.querySelector("[data-admin-piece-select]"),
+    form.querySelector("[data-admin-section-select]"),
+  ].filter(Boolean);
+
+  relatedSelects.forEach((select) => {
+    let selectedOptionIsVisible = select.value === "";
+
+    Array.from(select.options).forEach((option) => {
+      const optionCollectionId = option.dataset.collectionId || "";
+      const isPlaceholder = option.value === "";
+      const shouldShow = isPlaceholder || optionCollectionId === collectionId;
+
+      option.hidden = !shouldShow;
+      option.disabled = !shouldShow;
+
+      if (option.selected && shouldShow) {
+        selectedOptionIsVisible = true;
+      }
+    });
+
+    if (!selectedOptionIsVisible) {
+      select.value = "";
+    }
+  });
+}
+
+function bindMediaRelationForms() {
+  const forms = Array.from(document.querySelectorAll("form"));
+
+  forms.forEach((form) => {
+    const collectionSelect = form.querySelector("[data-admin-media-collection]");
+
+    if (!collectionSelect) {
+      return;
+    }
+
+    collectionSelect.addEventListener("change", () => syncMediaRelationForm(form));
+    syncMediaRelationForm(form);
+  });
+}
+
+function syncSectionVisualSettings(root = document) {
+  const forms = [];
+
+  if (root instanceof Element && root.matches("[data-section-settings-form]")) {
+    forms.push(root);
+  }
+
+  forms.push(...Array.from(root.querySelectorAll?.("[data-section-settings-form]") || []));
+
+  forms.forEach((form) => {
+    const typeSelect = form.querySelector("[data-section-type-select]");
+    const panels = Array.from(form.querySelectorAll("[data-section-settings-panel]"));
+    const activeType = typeSelect?.value || "";
+
+    panels.forEach((panel) => {
+      panel.hidden = panel.dataset.sectionSettingsPanel !== activeType;
+    });
+  });
+}
+
+function bindSectionVisualSettings() {
+  const forms = Array.from(document.querySelectorAll("[data-section-settings-form]"));
+
+  forms.forEach((form) => {
+    const typeSelect = form.querySelector("[data-section-type-select]");
+
+    typeSelect?.addEventListener("change", () => syncSectionVisualSettings(form));
+    form.addEventListener("reset", () => {
+      window.setTimeout(() => syncSectionVisualSettings(form), 0);
+    });
+  });
+
+  syncSectionVisualSettings();
+}
+
+function clearPanelControls(panel) {
+  const searchInput = panel.querySelector("[data-admin-search]");
+  const statusFilter = panel.querySelector("[data-admin-status-filter]");
+  const collectionFilter = panel.querySelector("[data-admin-collection-filter]");
+
+  if (searchInput) searchInput.value = "";
+  if (statusFilter) statusFilter.value = "all";
+  if (collectionFilter) collectionFilter.value = "all";
+
+  applyPanelFilters(panel);
+}
+
+function bindOpenMediaButtons() {
+  Array.from(document.querySelectorAll("[data-admin-open-media]")).forEach((button) => {
+    button.addEventListener("click", () => {
+      const mediaPanel = panels.find((panel) => panel.id === "multimedia");
+      const detailId = button.dataset.mediaDetailId || "";
+
+      if (!mediaPanel || detailId === "") {
+        return;
+      }
+
+      clearPanelControls(mediaPanel);
+      window.location.hash = "#multimedia";
+      setActiveView("multimedia");
+      setDetailSelection(mediaPanel, detailId);
+    });
+  });
+}
+
 function sortPanelItems(panel) {
   const sortSelect = panel.querySelector("[data-admin-sort]");
   const list = panel.querySelector(".admin-record-list");
@@ -185,17 +308,22 @@ function sortPanelItems(panel) {
     const rightOrder = Number(right.dataset.order || 0);
     const leftName = (left.dataset.name || "").toLowerCase();
     const rightName = (right.dataset.name || "").toLowerCase();
+    const leftCollection = (left.dataset.collectionName || "").toLowerCase();
+    const rightCollection = (right.dataset.collectionName || "").toLowerCase();
+    const collectionOrder = panel.id === "secciones"
+      ? leftCollection.localeCompare(rightCollection)
+      : 0;
 
     switch (sortValue) {
       case "order-desc":
-        return rightOrder - leftOrder || leftName.localeCompare(rightName);
+        return collectionOrder || rightOrder - leftOrder || leftName.localeCompare(rightName);
       case "name-asc":
         return leftName.localeCompare(rightName) || leftOrder - rightOrder;
       case "name-desc":
         return rightName.localeCompare(leftName) || leftOrder - rightOrder;
       case "order-asc":
       default:
-        return leftOrder - rightOrder || leftName.localeCompare(rightName);
+        return collectionOrder || leftOrder - rightOrder || leftName.localeCompare(rightName);
     }
   });
 
@@ -255,6 +383,7 @@ function setDetailSelection(panel, requestedDetailId, allowEmptySelection = fals
 function applyPanelFilters(panel) {
   const searchInput = panel.querySelector("[data-admin-search]");
   const statusFilter = panel.querySelector("[data-admin-status-filter]");
+  const collectionFilter = panel.querySelector("[data-admin-collection-filter]");
   const items = getPanelItems(panel);
   const noResults = panel.querySelector("[data-admin-no-results]");
 
@@ -264,6 +393,7 @@ function applyPanelFilters(panel) {
 
   const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
   const statusValue = statusFilter ? statusFilter.value : "all";
+  const collectionValue = collectionFilter ? collectionFilter.value : "all";
   let visibleCount = 0;
 
   items.forEach((item) => {
@@ -271,13 +401,15 @@ function applyPanelFilters(panel) {
     const isActive = item.dataset.active === "1";
     const isFeatured = item.dataset.featured === "1";
     const matchesSearch = query === "" || itemText.includes(query);
+    const matchesCollection =
+      collectionValue === "all" || item.dataset.collectionId === collectionValue;
     const matchesStatus =
       statusValue === "all" ||
       (statusValue === "active" && isActive) ||
       (statusValue === "inactive" && !isActive) ||
       (statusValue === "featured" && isFeatured);
 
-    const shouldShow = matchesSearch && matchesStatus;
+    const shouldShow = matchesSearch && matchesCollection && matchesStatus;
     item.hidden = !shouldShow;
 
     if (shouldShow) {
@@ -302,10 +434,12 @@ function bindPanelFilters() {
 
     const searchInput = toolbar.querySelector("[data-admin-search]");
     const statusFilter = toolbar.querySelector("[data-admin-status-filter]");
+    const collectionFilter = toolbar.querySelector("[data-admin-collection-filter]");
     const sortSelect = toolbar.querySelector("[data-admin-sort]");
 
     searchInput?.addEventListener("input", () => applyPanelFilters(panel));
     statusFilter?.addEventListener("change", () => applyPanelFilters(panel));
+    collectionFilter?.addEventListener("change", () => applyPanelFilters(panel));
     sortSelect?.addEventListener("change", () => {
       sortPanelItems(panel);
       applyPanelFilters(panel);
@@ -408,6 +542,9 @@ function initAdmin() {
   bindPanelFilters();
   bindDetailSelectors();
   bindImageFields();
+  bindMediaRelationForms();
+  bindSectionVisualSettings();
+  bindOpenMediaButtons();
 }
 
 window.addEventListener("hashchange", syncViewFromHash);

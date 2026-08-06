@@ -51,6 +51,271 @@ CREATE TABLE IF NOT EXISTS entities (
     ON DELETE RESTRICT
 );
 
+CREATE TABLE IF NOT EXISTS collection_templates (
+  id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(60) NOT NULL,
+  description VARCHAR(255) NULL,
+  preview_image VARCHAR(255) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_collection_template_slug (slug)
+);
+
+CREATE TABLE IF NOT EXISTS collection_template_variants (
+  id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  template_id SMALLINT UNSIGNED NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(80) NOT NULL,
+  description VARCHAR(255) NULL,
+  preview_image VARCHAR(255) NULL,
+  default_config LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL CHECK (json_valid(default_config)),
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_template_variant (template_id, slug),
+  CONSTRAINT fk_variant_template
+    FOREIGN KEY (template_id) REFERENCES collection_templates (id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+);
+
+INSERT INTO collection_templates (name, slug, description, preview_image, is_active)
+SELECT
+  'Heritage Template',
+  'heritage-template',
+  'Editorial template built for commemorative collection pages with a heritage narrative, timeline, gallery and feature-story sections.',
+  './assets/images/hero-125.png',
+  1
+WHERE NOT EXISTS (
+  SELECT 1 FROM collection_templates WHERE slug = 'heritage-template'
+);
+
+INSERT INTO collection_template_variants (template_id, name, slug, description, preview_image, default_config, is_active)
+SELECT
+  t.id,
+  'Narrative',
+  'narrative',
+  'Story-first variant with a hero manifesto, legacy timeline, editorial gallery, feature icons and a closing banner.',
+  './assets/images/hero-125.png',
+  '{
+    "theme": {
+      "tone": "heritage",
+      "surface": "ivory",
+      "accent": "sky-blue",
+      "ornament": "gold",
+      "imageStyle": "duotone-archive"
+    },
+    "header": {
+      "style": "minimal-editorial",
+      "showSearch": true,
+      "showAccount": true
+    },
+    "sections": [
+      {
+        "key": "hero",
+        "type": "split-hero",
+        "label": "01",
+        "headlineField": "name",
+        "bodyField": "concept",
+        "cta": {
+          "label": "Explora colección",
+          "target": "gallery"
+        },
+        "media": {
+          "sectionKey": "hero",
+          "fallback": "./assets/images/hero-125.png"
+        }
+      },
+      {
+        "key": "timeline",
+        "type": "milestone-rail",
+        "label": "02",
+        "eyebrow": "Nuestra historia",
+        "items": [
+          {
+            "year": "1902",
+            "title": "Nace el club"
+          },
+          {
+            "year": "1956",
+            "title": "La realeza toma forma"
+          },
+          {
+            "year": "2000",
+            "title": "Una era dorada"
+          },
+          {
+            "year": "2027",
+            "title": "125 años de legado"
+          }
+        ]
+      },
+      {
+        "key": "gallery",
+        "type": "editorial-grid",
+        "label": "03",
+        "eyebrow": "La camiseta del 125 aniversario",
+        "columns": 4,
+        "source": "collection-media",
+        "fallbackMedia": [
+          "./assets/images/125an.png",
+          "./assets/images/125anback.png"
+        ]
+      },
+      {
+        "key": "features",
+        "type": "icon-features",
+        "label": "04",
+        "eyebrow": "Detalles que cuentan quiénes somos",
+        "items": [
+          {
+            "title": "Emblema exclusivo",
+            "description": "125 años"
+          },
+          {
+            "title": "AEROREADY",
+            "description": "Tejido técnico"
+          },
+          {
+            "title": "Entrega personalizada",
+            "description": "Edición limitada"
+          },
+          {
+            "title": "Tecnología heat.rdy",
+            "description": "Ligereza y rendimiento"
+          }
+        ]
+      },
+      {
+        "key": "closing-banner",
+        "type": "split-banner",
+        "label": "05",
+        "headline": "El futuro comienza aquí",
+        "media": {
+          "fallback": "./assets/images/hero-125.png"
+        }
+      }
+    ]
+  }',
+  1
+FROM collection_templates t
+WHERE t.slug = 'heritage-template'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM collection_template_variants v
+    WHERE v.template_id = t.id AND v.slug = 'narrative'
+  );
+
+INSERT INTO collection_template_variants (template_id, name, slug, description, preview_image, default_config, is_active)
+SELECT
+  t.id,
+  'Monument',
+  'monument',
+  'Monument-focused variant with a manifesto quote, key stats, gallery and reduced editorial rhythm.',
+  './assets/images/hero-125.png',
+  '{
+    "theme": {
+      "tone": "heritage",
+      "surface": "ivory",
+      "accent": "sky-blue",
+      "ornament": "gold",
+      "imageStyle": "archive-clean"
+    },
+    "sections": [
+      {
+        "key": "hero",
+        "type": "split-hero",
+        "label": "01",
+        "headlineField": "name",
+        "bodyField": "short_description",
+        "cta": {
+          "label": "Ver detalles",
+          "target": "section-gallery"
+        },
+        "media": {
+          "sectionKey": "hero",
+          "fallback": "./assets/images/hero-125.png"
+        }
+      },
+      {
+        "key": "manifesto",
+        "type": "quote-block",
+        "label": "02",
+        "eyebrow": "Manifiesto",
+        "quote": "125 años convertidos en una pieza silenciosa, limpia y ceremonial.",
+        "caption": "Legacy edition"
+      },
+      {
+        "key": "stats",
+        "type": "stat-grid",
+        "label": "03",
+        "eyebrow": "Datos clave",
+        "items": [
+          {
+            "value": "1902",
+            "label": "Origen",
+            "detail": "Nacimiento del club"
+          },
+          {
+            "value": "125",
+            "label": "Aniversario",
+            "detail": "Años de historia"
+          },
+          {
+            "value": "01",
+            "label": "Edición",
+            "detail": "Capsule conmemorativa"
+          },
+          {
+            "value": "RM",
+            "label": "Sello",
+            "detail": "Identidad central"
+          }
+        ]
+      },
+      {
+        "key": "gallery",
+        "type": "editorial-grid",
+        "label": "04",
+        "eyebrow": "Vista de producto",
+        "columns": 3,
+        "fallbackMedia": [
+          "./assets/images/125an.png",
+          "./assets/images/125anback.png",
+          "./assets/images/hero-125.png"
+        ]
+      },
+      {
+        "key": "pieces",
+        "type": "piece-list",
+        "label": "05",
+        "eyebrow": "Construcción de la edición",
+        "headline": "Detalles de la colección"
+      },
+      {
+        "key": "closing-banner",
+        "type": "split-banner",
+        "label": "06",
+        "headline": "Un cierre construido para perdurar",
+        "media": {
+          "fallback": "./assets/images/hero-125.png"
+        }
+      }
+    ]
+  }',
+  1
+FROM collection_templates t
+WHERE t.slug = 'heritage-template'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM collection_template_variants v
+    WHERE v.template_id = t.id AND v.slug = 'monument'
+  );
+
 CREATE TABLE IF NOT EXISTS collections (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   entity_id INT UNSIGNED NOT NULL,
@@ -70,6 +335,9 @@ CREATE TABLE IF NOT EXISTS collections (
   text_color VARCHAR(30) NULL,
   image_variant VARCHAR(30) NULL,
   layout_style VARCHAR(60) NULL,
+  template_id SMALLINT UNSIGNED NULL,
+  template_variant_id SMALLINT UNSIGNED NULL,
+  template_config LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL CHECK (json_valid(template_config)),
   display_order INT UNSIGNED NOT NULL DEFAULT 0,
   is_featured TINYINT(1) NOT NULL DEFAULT 0,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -80,10 +348,61 @@ CREATE TABLE IF NOT EXISTS collections (
   UNIQUE KEY unique_collections_entity_slug (entity_id, slug),
   KEY idx_collections_entity_id (entity_id),
   KEY idx_collections_featured (is_featured, is_active, display_order),
+  KEY idx_collections_template_id (template_id),
+  KEY fk_collection_template_variant (template_variant_id),
   CONSTRAINT fk_collections_entity_id
     FOREIGN KEY (entity_id) REFERENCES entities (id)
     ON UPDATE CASCADE
-    ON DELETE RESTRICT
+    ON DELETE RESTRICT,
+  CONSTRAINT fk_collections_template_id
+    FOREIGN KEY (template_id) REFERENCES collection_templates (id)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL,
+  CONSTRAINT fk_collection_template_variant
+    FOREIGN KEY (template_variant_id) REFERENCES collection_template_variants (id)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS collection_sections (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  collection_id INT UNSIGNED NOT NULL,
+
+  section_key VARCHAR(80) NOT NULL,
+  section_type VARCHAR(60) NOT NULL,
+
+  eyebrow VARCHAR(150) NULL,
+  title VARCHAR(200) NULL,
+  body TEXT NULL,
+
+  settings_json JSON NULL,
+
+  display_order INT UNSIGNED NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+
+  UNIQUE KEY unique_collection_section_key (
+    collection_id,
+    section_key
+  ),
+
+  KEY idx_collection_sections_order (
+    collection_id,
+    is_active,
+    display_order
+  ),
+
+  CONSTRAINT fk_collection_sections_collection
+    FOREIGN KEY (collection_id)
+    REFERENCES collections(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS pieces (

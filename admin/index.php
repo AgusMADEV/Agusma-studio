@@ -12,13 +12,35 @@ $dashboard = adminLoadDashboardData($connection);
 $categories = $dashboard['categories'];
 $entities = $dashboard['entities'];
 $collections = $dashboard['collections'];
+$sections = $dashboard['sections'];
 $pieces = $dashboard['pieces'];
 $mediaItems = $dashboard['mediaItems'];
 $legacyFeaturedCount = $dashboard['legacyFeaturedCount'];
 $flashMessage = trim((string) ($_GET['message'] ?? ''));
+$requestedDetailId = trim((string) ($_GET['detail'] ?? ''));
+$mediaBySection = [];
+$unassignedMediaByCollection = [];
+
+foreach ($mediaItems as $mediaItem) {
+    if ($mediaItem['piece_id'] !== null) {
+        continue;
+    }
+
+    $collectionId = (int) $mediaItem['collection_id'];
+    $sectionKey = trim((string) ($mediaItem['section_key'] ?? ''));
+
+    if ($sectionKey === '') {
+        $unassignedMediaByCollection[$collectionId][] = $mediaItem;
+        continue;
+    }
+
+    $mediaBySection[$collectionId . ':' . $sectionKey][] = $mediaItem;
+}
+
 $totalCategories = count($categories);
 $totalEntities = count($entities);
 $totalCollections = count($collections);
+$totalSections = count($sections);
 $totalPieces = count($pieces);
 $totalMedia = count($mediaItems);
 ?>
@@ -46,6 +68,7 @@ $totalMedia = count($mediaItems);
         <a class="admin-sidebar-link" href="#categorias" data-admin-nav><span class="admin-sidebar-icon"></span><span>Categorias</span></a>
         <a class="admin-sidebar-link" href="#entidades" data-admin-nav><span class="admin-sidebar-icon"></span><span>Entidades</span></a>
         <a class="admin-sidebar-link" href="#colecciones" data-admin-nav><span class="admin-sidebar-icon"></span><span>Colecciones</span></a>
+        <a class="admin-sidebar-link" href="#secciones" data-admin-nav><span class="admin-sidebar-icon"></span><span>Secciones</span></a>
         <a class="admin-sidebar-link" href="#piezas" data-admin-nav><span class="admin-sidebar-icon"></span><span>Piezas</span></a>
         <a class="admin-sidebar-link" href="#multimedia" data-admin-nav><span class="admin-sidebar-icon"></span><span>Multimedia</span></a>
       </nav>
@@ -108,6 +131,11 @@ $totalMedia = count($mediaItems);
               <span>colecciones</span>
               <strong><?= $totalCollections ?></strong>
               <p>Conjuntos publicados o en proceso.</p>
+            </article>
+            <article class="admin-summary-card">
+              <span>secciones</span>
+              <strong><?= $totalSections ?></strong>
+              <p>Bloques dinamicos que componen cada coleccion.</p>
             </article>
             <article class="admin-summary-card">
               <span>piezas</span>
@@ -227,6 +255,36 @@ $totalMedia = count($mediaItems);
               </form>
             </section>
 
+
+            <section class="admin-card admin-card--form" id="crear-seccion">
+              <h3>Nueva seccion</h3>
+              <form method="post" class="admin-form" data-section-settings-form>
+                <input type="hidden" name="action" value="create_section" />
+                <label>Coleccion
+                  <select name="collection_id" required>
+                    <?php foreach ($collections as $collection): ?>
+                      <option value="<?= (int) $collection['id'] ?>"><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
+                <label>Tipo de seccion
+                  <select name="section_type" required data-section-type-select>
+                    <?php foreach (adminSectionTypeOptions() as $sectionType => $sectionTypeLabel): ?>
+                      <option value="<?= adminEscape($sectionType) ?>"><?= adminEscape($sectionTypeLabel) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
+                <label>Section key<input type="text" name="section_key" placeholder="campaign" required /></label>
+                <label>Eyebrow<input type="text" name="eyebrow" placeholder="Campaign" /></label>
+                <label>Titulo<input type="text" name="title" /></label>
+                <label>Contenido<textarea name="body"></textarea></label>
+                <?= adminRenderSectionVisualSettings('intro') ?>
+                <label>Orden<input type="number" name="display_order" min="0" placeholder="Automatico" /></label>
+                <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
+                <button type="submit">Crear seccion</button>
+              </form>
+            </section>
+
             <section class="admin-card admin-card--form">
               <h3>Nueva pieza</h3>
               <form method="post" class="admin-form">
@@ -254,30 +312,38 @@ $totalMedia = count($mediaItems);
 
             <section class="admin-card admin-card--form">
               <h3>Nueva multimedia</h3>
-              <form method="post" class="admin-form">
+              <form method="post" class="admin-form" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="create_media" />
                 <label>Coleccion
-                  <select name="collection_id" required>
+                  <select name="collection_id" required data-admin-media-collection>
                     <?php foreach ($collections as $collection): ?>
                       <option value="<?= (int) $collection['id'] ?>"><?= adminEscape(adminCollectionLabel($collection)) ?></option>
                     <?php endforeach; ?>
                   </select>
                 </label>
                 <label>Pieza opcional
-                  <select name="piece_id">
+                  <select name="piece_id" data-admin-piece-select>
                     <option value="">Multimedia general de la coleccion</option>
                     <?php foreach ($pieces as $piece): ?>
-                      <option value="<?= (int) $piece['id'] ?>"><?= adminEscape(adminPieceLabel($piece)) ?></option>
+                      <option value="<?= (int) $piece['id'] ?>" data-collection-id="<?= (int) $piece['collection_id'] ?>"><?= adminEscape(adminPieceLabel($piece)) ?></option>
                     <?php endforeach; ?>
                   </select>
                 </label>
                 <label>Media type<input type="text" name="media_type" value="image" required /></label>
-                <label>File URL / ruta<input type="text" name="file_url" required /></label>
+                <label>Subir imagen<input type="file" name="media_file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" /></label>
+                <label>File URL / ruta<input type="text" name="file_url" placeholder="Opcional si subes un archivo" /></label>
                 <label>Thumbnail URL<input type="text" name="thumbnail_url" /></label>
                 <label>Titulo<input type="text" name="title" /></label>
                 <label>Alt text<input type="text" name="alt_text" /></label>
                 <label>Caption<textarea name="caption"></textarea></label>
-                <label>Section key<input type="text" name="section_key" /></label>
+                <label>Seccion opcional
+                  <select name="section_key" data-admin-section-select>
+                    <option value="">Sin seccion</option>
+                    <?php foreach ($sections as $section): ?>
+                      <option value="<?= adminEscape((string) $section['section_key']) ?>" data-collection-id="<?= (int) $section['collection_id'] ?>"><?= adminEscape((string) $section['collection_name'] . ' · ' . ($section['title'] ?: $section['section_key'])) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
                 <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
                 <label class="admin-checkbox"><input type="checkbox" name="is_cover" /> Portada</label>
                 <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
@@ -865,6 +931,306 @@ $totalMedia = count($mediaItems);
           </div>
         </section>
 
+
+        <section class="admin-panel" id="secciones" data-admin-panel data-selected-detail-id="<?= adminEscape(str_starts_with($requestedDetailId, 'section-') ? $requestedDetailId : '') ?>">
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-master-detail-main">
+              <div class="admin-page-heading">
+                <div>
+                  <h2>Secciones</h2>
+                  <p>Compone cada vista de coleccion con bloques reutilizables y ordenables.</p>
+                </div>
+                <span class="admin-page-count"><?= count($sections) ?> registradas</span>
+              </div>
+
+              <div class="admin-panel-toolbar admin-panel-toolbar--sections">
+                <label class="admin-panel-search">
+                  <span>Buscar</span>
+                  <input type="search" placeholder="Titulo, key, tipo o coleccion" data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Coleccion</span>
+                  <select data-admin-collection-filter>
+                    <option value="all">Todas</option>
+                    <?php foreach ($collections as $collection): ?>
+                      <option value="<?= (int) $collection['id'] ?>"><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Estado</span>
+                  <select data-admin-status-filter>
+                    <option value="all">Todos</option>
+                    <option value="active">Activas</option>
+                    <option value="inactive">Inactivas</option>
+                  </select>
+                </label>
+                <label class="admin-panel-filter admin-panel-filter--sort">
+                  <span>Orden</span>
+                  <select data-admin-sort>
+                    <option value="order-asc">Ascendente</option>
+                    <option value="order-desc">Descendente</option>
+                    <option value="name-asc">A-Z</option>
+                    <option value="name-desc">Z-A</option>
+                  </select>
+                </label>
+                <a class="admin-toolbar-cta" href="#crear-contenido">Nueva seccion</a>
+              </div>
+
+              <div class="admin-record-list admin-list">
+                <div class="admin-list-head admin-list-head--sections" aria-hidden="true">
+                  <span>Seccion</span>
+                  <span>Coleccion</span>
+                  <span>Tipo</span>
+                  <span>Orden</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
+                </div>
+                <?php foreach ($sections as $section): ?>
+                  <?php $sectionTitle = adminFirstNonEmpty([(string) $section['title'], (string) $section['eyebrow'], (string) $section['section_key']], 'Seccion sin titulo'); ?>
+                  <?php $sectionSummary = adminFirstNonEmpty([(string) $section['body'], (string) $section['section_key']], 'Sin contenido textual.'); ?>
+                  <?php $sectionTypeLabel = adminSectionTypeLabel((string) $section['section_type']); ?>
+                  <button type="button" class="admin-item admin-item--section" data-admin-item data-admin-detail-trigger data-detail-id="section-<?= (int) $section['id'] ?>" data-active="<?= (int) $section['is_active'] ?>" data-featured="0" data-order="<?= (int) $section['display_order'] ?>" data-name="<?= adminEscape(strtolower($sectionTitle . ' ' . $section['section_key'])) ?>" data-collection-id="<?= (int) $section['collection_id'] ?>" data-collection-name="<?= adminEscape(strtolower((string) $section['collection_name'])) ?>" aria-controls="detail-section-<?= (int) $section['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media is-empty"><span class="admin-section-type-mark"><?= adminEscape(strtoupper(substr((string) $section['section_type'], 0, 2))) ?></span></span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker"><?= adminEscape((string) $section['section_key']) ?></span>
+                        <span class="admin-item-title"><?= adminEscape($sectionTitle) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape($sectionSummary) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell"><?= adminEscape((string) $section['collection_name']) ?></span>
+                    <span class="admin-item-cell"><?= adminEscape($sectionTypeLabel) ?></span>
+                    <span class="admin-item-cell admin-item-cell--order"><?= (int) $section['display_order'] ?></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $section['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
+                  </button>
+                <?php endforeach; ?>
+                <p class="admin-no-results" data-admin-no-results hidden>No hay secciones con ese filtro.</p>
+                <p class="admin-list-foot">Mostrando <?= count($sections) ?> secciones</p>
+              </div>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona una seccion visible para ver sus detalles.</p>
+              <?php foreach ($sections as $section): ?>
+                <?php $sectionTitle = adminFirstNonEmpty([(string) $section['title'], (string) $section['eyebrow'], (string) $section['section_key']], 'Seccion sin titulo'); ?>
+                <?php $sectionSummary = adminFirstNonEmpty([(string) $section['body'], (string) $section['section_key']], 'Sin contenido textual.'); ?>
+                <?php $sectionTypeLabel = adminSectionTypeLabel((string) $section['section_type']); ?>
+                <?php $sectionMediaKey = (int) $section['collection_id'] . ':' . (string) $section['section_key']; ?>
+                <?php $sectionMediaItems = $mediaBySection[$sectionMediaKey] ?? []; ?>
+                <?php $availableSectionMedia = $unassignedMediaByCollection[(int) $section['collection_id']] ?? []; ?>
+                <div class="admin-detail-panel" data-admin-detail-panel data-detail-id="section-<?= (int) $section['id'] ?>" id="detail-section-<?= (int) $section['id'] ?>" hidden>
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de seccion</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero admin-detail-hero--section">
+                      <span><?= adminEscape($sectionTypeLabel) ?></span>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar seccion</h3>
+                      <p>Cambia el componente, el contenido y su posicion dentro de la coleccion.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $section['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip">Orden <?= (int) $section['display_order'] ?></span>
+                      <span class="admin-edit-chip"><?= count($sectionMediaItems) ?> recursos</span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Titulo</span><strong><?= adminEscape($sectionTitle) ?></strong></div>
+                        <div><span>Section key</span><strong><?= adminEscape((string) $section['section_key']) ?></strong></div>
+                        <div><span>Tipo</span><strong><?= adminEscape($sectionTypeLabel) ?></strong></div>
+                        <div><span>Coleccion</span><strong><?= adminEscape((string) $section['collection_name']) ?></strong></div>
+                        <div><span>Orden</span><strong><?= (int) $section['display_order'] ?></strong></div>
+                        <div><span>Multimedia</span><strong><?= count($sectionMediaItems) ?> vinculada<?= count($sectionMediaItems) === 1 ? '' : 's' ?></strong></div>
+                        <div><span>Contenido</span><strong><?= adminEscape($sectionSummary) ?></strong></div>
+                        <div><span>Settings</span><strong><?= adminEscape(adminFormatJsonForTextarea($section['settings_json']) ?: 'Sin ajustes') ?></strong></div>
+                        <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $section['updated_at'])) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <form method="post" class="admin-inline-form">
+                        <input type="hidden" name="action" value="move_section_up" />
+                        <input type="hidden" name="id" value="<?= (int) $section['id'] ?>" />
+                        <button type="submit" class="admin-link admin-link--move">Subir</button>
+                      </form>
+                      <form method="post" class="admin-inline-form">
+                        <input type="hidden" name="action" value="move_section_down" />
+                        <input type="hidden" name="id" value="<?= (int) $section['id'] ?>" />
+                        <button type="submit" class="admin-link admin-link--move">Bajar</button>
+                      </form>
+                    </div>
+
+                    <form method="post" class="admin-detail-editor" data-admin-editable data-section-settings-form hidden>
+                      <input type="hidden" name="action" value="update_section" />
+                      <input type="hidden" name="id" value="<?= (int) $section['id'] ?>" />
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Coleccion
+                          <select name="collection_id" required>
+                            <?php foreach ($collections as $collection): ?>
+                              <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($section['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                        <label class="admin-detail-field">Tipo de seccion
+                          <select name="section_type" required data-section-type-select>
+                            <?php foreach (adminSectionTypeOptions() as $sectionType => $sectionTypeOptionLabel): ?>
+                              <option value="<?= adminEscape($sectionType) ?>" <?= adminSelected($section['section_type'], $sectionType) ?>><?= adminEscape($sectionTypeOptionLabel) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Section key<input type="text" name="section_key" value="<?= adminEscape($section['section_key']) ?>" required /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $section['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Eyebrow<input type="text" name="eyebrow" value="<?= adminEscape($section['eyebrow']) ?>" /></label>
+                        <label class="admin-detail-field">Titulo<input type="text" name="title" value="<?= adminEscape($section['title']) ?>" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Contenido<textarea name="body"><?= adminEscape($section['body']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <?= adminRenderSectionVisualSettings((string) $section['section_type'], $section['settings_json']) ?>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked($section['is_active']) ?> /> Activa</label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-actions admin-actions--editor">
+                        <button type="submit" class="admin-button admin-button--primary">Guardar cambios</button>
+                        <button type="button" class="admin-button admin-button--secondary" data-admin-cancel-edit>Cancelar</button>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <button type="submit" name="submit_action" value="delete_section" class="admin-button admin-button--danger admin-button--text" formnovalidate onclick="return confirm('La seccion se eliminara y sus recursos quedaran sin seccion. Continuar?');">Eliminar seccion</button>
+                      </div>
+                    </form>
+
+                    <section class="admin-section-media-manager" data-section-media-manager>
+                      <div class="admin-section-media-heading">
+                        <div>
+                          <p class="admin-eyebrow">Multimedia vinculada</p>
+                          <h3><?= adminEscape($sectionTitle) ?></h3>
+                        </div>
+                        <span class="admin-section-media-count"><?= count($sectionMediaItems) ?> recursos</span>
+                      </div>
+
+                      <?php if ($sectionMediaItems !== []): ?>
+                        <div class="admin-section-media-list">
+                          <?php foreach ($sectionMediaItems as $sectionMediaIndex => $sectionMedia): ?>
+                            <?php $sectionMediaPreview = adminRecordPreviewImage($sectionMedia, ['thumbnail_url', 'file_url']); ?>
+                            <article class="admin-section-media-item<?= (int) $sectionMedia['is_active'] === 1 ? '' : ' is-inactive' ?>">
+                              <div class="admin-section-media-preview<?= $sectionMediaPreview === '' ? ' is-empty' : '' ?>">
+                                <?php if ($sectionMediaPreview !== ''): ?>
+                                  <img src="<?= adminEscape($sectionMediaPreview) ?>" alt="<?= adminEscape((string) ($sectionMedia['alt_text'] ?: $sectionMedia['title'] ?: 'Imagen de la seccion')) ?>" loading="lazy" />
+                                <?php else: ?>
+                                  <span><?= adminEscape(strtoupper(substr((string) $sectionMedia['media_type'], 0, 1))) ?></span>
+                                <?php endif; ?>
+                              </div>
+                              <div class="admin-section-media-copy">
+                                <span><?= (int) $sectionMedia['display_order'] ?> · <?= (int) $sectionMedia['is_active'] === 1 ? 'Visible' : 'Oculta' ?></span>
+                                <strong><?= adminEscape((string) ($sectionMedia['title'] ?: basename((string) $sectionMedia['file_url']))) ?></strong>
+                                <small><?= adminEscape((string) ($sectionMedia['alt_text'] ?: $sectionMedia['caption'] ?: $sectionMedia['file_url'])) ?></small>
+                              </div>
+                              <div class="admin-section-media-actions">
+                                <button type="button" class="admin-media-action" data-admin-open-media data-media-detail-id="media-<?= (int) $sectionMedia['id'] ?>">Editar</button>
+                                <form method="post" class="admin-inline-form">
+                                  <input type="hidden" name="action" value="move_section_media_up" />
+                                  <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                                  <input type="hidden" name="media_id" value="<?= (int) $sectionMedia['id'] ?>" />
+                                  <button type="submit" class="admin-media-action" <?= $sectionMediaIndex === 0 ? 'disabled' : '' ?>>Subir</button>
+                                </form>
+                                <form method="post" class="admin-inline-form">
+                                  <input type="hidden" name="action" value="move_section_media_down" />
+                                  <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                                  <input type="hidden" name="media_id" value="<?= (int) $sectionMedia['id'] ?>" />
+                                  <button type="submit" class="admin-media-action" <?= $sectionMediaIndex === count($sectionMediaItems) - 1 ? 'disabled' : '' ?>>Bajar</button>
+                                </form>
+                                <form method="post" class="admin-inline-form">
+                                  <input type="hidden" name="action" value="toggle_section_media" />
+                                  <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                                  <input type="hidden" name="media_id" value="<?= (int) $sectionMedia['id'] ?>" />
+                                  <button type="submit" class="admin-media-action"><?= (int) $sectionMedia['is_active'] === 1 ? 'Ocultar' : 'Mostrar' ?></button>
+                                </form>
+                                <form method="post" class="admin-inline-form">
+                                  <input type="hidden" name="action" value="detach_section_media" />
+                                  <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                                  <input type="hidden" name="media_id" value="<?= (int) $sectionMedia['id'] ?>" />
+                                  <button type="submit" class="admin-media-action admin-media-action--muted">Desvincular</button>
+                                </form>
+                                <form method="post" class="admin-inline-form">
+                                  <input type="hidden" name="action" value="delete_section_media" />
+                                  <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                                  <input type="hidden" name="media_id" value="<?= (int) $sectionMedia['id'] ?>" />
+                                  <button type="submit" class="admin-media-action admin-media-action--danger" onclick="return confirm('Se eliminara este recurso de la base de datos. Continuar?');">Eliminar</button>
+                                </form>
+                              </div>
+                            </article>
+                          <?php endforeach; ?>
+                        </div>
+                      <?php else: ?>
+                        <p class="admin-section-media-empty">Esta seccion aun no tiene recursos. Sube una imagen o vincula una ya existente.</p>
+                      <?php endif; ?>
+
+                      <div class="admin-section-media-forms">
+                        <form method="post" enctype="multipart/form-data" class="admin-section-media-form">
+                          <input type="hidden" name="action" value="create_section_media" />
+                          <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                          <input type="hidden" name="media_type" value="image" />
+                          <div class="admin-section-media-form-heading">
+                            <strong>Anadir imagen</strong>
+                            <span>Se guardara directamente en <?= adminEscape((string) $section['section_key']) ?>.</span>
+                          </div>
+                          <label>Archivo
+                            <input type="file" name="media_file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" />
+                          </label>
+                          <label>O URL / ruta
+                            <input type="text" name="file_url" placeholder="./assets/images/campaign-01.jpg" />
+                          </label>
+                          <div class="admin-section-media-form-grid">
+                            <label>Titulo<input type="text" name="title" /></label>
+                            <label>Texto alternativo<input type="text" name="alt_text" /></label>
+                          </div>
+                          <label>Pie de foto<textarea name="caption"></textarea></label>
+                          <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Visible en la web</label>
+                          <button type="submit" class="admin-button admin-button--primary">Subir y vincular</button>
+                          <p class="admin-upload-hint">JPG, PNG, WEBP, AVIF o GIF. Maximo 15 MB.</p>
+                        </form>
+
+                        <form method="post" class="admin-section-media-form admin-section-media-form--existing">
+                          <input type="hidden" name="action" value="attach_section_media" />
+                          <input type="hidden" name="section_id" value="<?= (int) $section['id'] ?>" />
+                          <div class="admin-section-media-form-heading">
+                            <strong>Vincular existente</strong>
+                            <span>Solo aparecen recursos generales sin seccion de esta coleccion.</span>
+                          </div>
+                          <label>Recurso disponible
+                            <select name="media_id" <?= $availableSectionMedia === [] ? 'disabled' : 'required' ?>>
+                              <?php if ($availableSectionMedia === []): ?>
+                                <option value="">No hay recursos disponibles</option>
+                              <?php else: ?>
+                                <?php foreach ($availableSectionMedia as $availableMedia): ?>
+                                  <option value="<?= (int) $availableMedia['id'] ?>"><?= adminEscape((string) ($availableMedia['title'] ?: basename((string) $availableMedia['file_url']))) ?></option>
+                                <?php endforeach; ?>
+                              <?php endif; ?>
+                            </select>
+                          </label>
+                          <button type="submit" class="admin-button admin-button--secondary" <?= $availableSectionMedia === [] ? 'disabled' : '' ?>>Vincular recurso</button>
+                        </form>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </section>
+
         <section class="admin-panel" id="piezas" data-admin-panel>
           <div class="admin-master-detail" data-admin-master-detail>
             <div class="admin-master-detail-main">
@@ -1041,7 +1407,7 @@ $totalMedia = count($mediaItems);
           </div>
         </section>
 
-        <section class="admin-panel" id="multimedia" data-admin-panel>
+        <section class="admin-panel" id="multimedia" data-admin-panel data-selected-detail-id="<?= adminEscape(str_starts_with($requestedDetailId, 'media-') ? $requestedDetailId : '') ?>">
           <div class="admin-master-detail" data-admin-master-detail>
             <div class="admin-master-detail-main">
               <div class="admin-page-heading">
@@ -1056,6 +1422,15 @@ $totalMedia = count($mediaItems);
                 <label class="admin-panel-search">
                   <span>Buscar</span>
                   <input type="search" placeholder="Titulo, ruta o coleccion" data-admin-search />
+                </label>
+                <label class="admin-panel-filter">
+                  <span>Coleccion</span>
+                  <select data-admin-collection-filter>
+                    <option value="all">Todas</option>
+                    <?php foreach ($collections as $collection): ?>
+                      <option value="<?= (int) $collection['id'] ?>"><?= adminEscape(adminCollectionLabel($collection)) ?></option>
+                    <?php endforeach; ?>
+                  </select>
                 </label>
                 <label class="admin-panel-filter">
                   <span>Estado</span>
@@ -1089,7 +1464,7 @@ $totalMedia = count($mediaItems);
                 <?php foreach ($mediaItems as $media): ?>
                   <?php $mediaSummary = adminFirstNonEmpty([(string) $media['caption'], (string) $media['alt_text'], (string) $media['file_url']], 'Sin resumen disponible.'); ?>
                   <?php $mediaPreview = adminRecordPreviewImage($media, ['thumbnail_url', 'file_url']); ?>
-                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="media-<?= (int) $media['id'] ?>" data-active="<?= (int) $media['is_active'] ?>" data-featured="<?= (int) $media['is_cover'] ?>" data-order="<?= (int) $media['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) ($media['title'] ?: $media['file_url']))) ?>" aria-controls="detail-media-<?= (int) $media['id'] ?>">
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="media-<?= (int) $media['id'] ?>" data-active="<?= (int) $media['is_active'] ?>" data-featured="<?= (int) $media['is_cover'] ?>" data-order="<?= (int) $media['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) ($media['title'] ?: $media['file_url']))) ?>" data-collection-id="<?= (int) $media['collection_id'] ?>" data-collection-name="<?= adminEscape(strtolower((string) $media['collection_name'])) ?>" aria-controls="detail-media-<?= (int) $media['id'] ?>">
                     <span class="admin-item-main">
                       <span class="admin-item-media<?= $mediaPreview === '' ? ' is-empty' : '' ?>">
                         <?php if ($mediaPreview !== ''): ?>
@@ -1105,7 +1480,7 @@ $totalMedia = count($mediaItems);
                       </span>
                     </span>
                     <span class="admin-item-cell"><?= adminEscape($media['media_type']) ?></span>
-                    <span class="admin-item-cell"><?= adminEscape((string) ($media['piece_name'] ?? 'Coleccion')) ?></span>
+                    <span class="admin-item-cell"><?= adminEscape((string) ($media['piece_name'] ?? ($media['section_title'] ? 'Seccion · ' . $media['section_title'] : 'Coleccion'))) ?></span>
                     <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $media['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
                     <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
                   </button>
@@ -1120,7 +1495,7 @@ $totalMedia = count($mediaItems);
               <?php foreach ($mediaItems as $media): ?>
                 <?php $mediaSummary = adminFirstNonEmpty([(string) $media['caption'], (string) $media['alt_text'], (string) $media['file_url']], 'Sin resumen disponible.'); ?>
                 <?php $mediaPreview = adminRecordPreviewImage($media, ['file_url', 'thumbnail_url']); ?>
-                <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="media-<?= (int) $media['id'] ?>" id="detail-media-<?= (int) $media['id'] ?>" hidden>
+                <form method="post" enctype="multipart/form-data" class="admin-detail-panel" data-admin-detail-panel data-detail-id="media-<?= (int) $media['id'] ?>" id="detail-media-<?= (int) $media['id'] ?>" hidden>
                   <input type="hidden" name="action" value="update_media" />
                   <input type="hidden" name="id" value="<?= (int) $media['id'] ?>" />
                   <div class="admin-detail-card">
@@ -1149,6 +1524,7 @@ $totalMedia = count($mediaItems);
                         <div><span>Tipo</span><strong><?= adminEscape($media['media_type']) ?></strong></div>
                         <div><span>Coleccion</span><strong><?= adminEscape((string) ($media['collection_name'] ?? 'Sin coleccion')) ?></strong></div>
                         <div><span>Scope</span><strong><?= adminEscape((string) ($media['piece_name'] ?? 'Coleccion')) ?></strong></div>
+                        <div><span>Seccion</span><strong><?= adminEscape((string) ($media['section_title'] ?: $media['section_key'] ?: 'Sin seccion')) ?></strong></div>
                         <div><span>Resumen / descripcion</span><strong><?= adminEscape($mediaSummary) ?></strong></div>
                         <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $media['updated_at'])) ?></strong></div>
                       </div>
@@ -1162,17 +1538,17 @@ $totalMedia = count($mediaItems);
                     <div class="admin-detail-editor" data-admin-editable hidden>
                       <div class="admin-detail-editor-row admin-detail-editor-row--split">
                         <label class="admin-detail-field">Coleccion
-                          <select name="collection_id" required>
+                          <select name="collection_id" required data-admin-media-collection>
                             <?php foreach ($collections as $collection): ?>
                               <option value="<?= (int) $collection['id'] ?>" <?= adminSelected($media['collection_id'], $collection['id']) ?>><?= adminEscape(adminCollectionLabel($collection)) ?></option>
                             <?php endforeach; ?>
                           </select>
                         </label>
                         <label class="admin-detail-field">Pieza opcional
-                          <select name="piece_id">
+                          <select name="piece_id" data-admin-piece-select>
                             <option value="">Multimedia general de la coleccion</option>
                             <?php foreach ($pieces as $piece): ?>
-                              <option value="<?= (int) $piece['id'] ?>" <?= adminSelected($media['piece_id'], $piece['id']) ?>><?= adminEscape(adminPieceLabel($piece)) ?></option>
+                              <option value="<?= (int) $piece['id'] ?>" data-collection-id="<?= (int) $piece['collection_id'] ?>" <?= adminSelected($media['piece_id'], $piece['id']) ?>><?= adminEscape(adminPieceLabel($piece)) ?></option>
                             <?php endforeach; ?>
                           </select>
                         </label>
@@ -1183,8 +1559,21 @@ $totalMedia = count($mediaItems);
                       </div>
                       <div class="admin-detail-editor-row admin-detail-editor-row--split">
                         <label class="admin-detail-field">Alt text<input type="text" name="alt_text" value="<?= adminEscape($media['alt_text']) ?>" /></label>
-                        <label class="admin-detail-field">Section key<input type="text" name="section_key" value="<?= adminEscape($media['section_key']) ?>" /></label>
+                        <label class="admin-detail-field">Seccion
+                          <select name="section_key" data-admin-section-select>
+                            <option value="">Sin seccion</option>
+                            <?php foreach ($sections as $section): ?>
+                              <option value="<?= adminEscape((string) $section['section_key']) ?>" data-collection-id="<?= (int) $section['collection_id'] ?>" <?= ((int) $media['collection_id'] === (int) $section['collection_id'] && (string) $media['section_key'] === (string) $section['section_key']) ? 'selected' : '' ?>><?= adminEscape((string) ($section['title'] ?: $section['section_key'])) ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
                         <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $media['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Reemplazar archivo
+                          <input type="file" name="media_file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" />
+                        </label>
+                        <p class="admin-upload-hint">Opcional. Si eliges un archivo nuevo, sustituira la ruta principal al guardar.</p>
                       </div>
                       <div class="admin-detail-editor-row admin-detail-editor-row--split admin-detail-editor-row--media">
                         <label class="admin-asset-field admin-detail-field" data-admin-image-field>

@@ -34,20 +34,26 @@ require __DIR__ . '/includes/head.php';
 require __DIR__ . '/includes/category-rail.php';
 require __DIR__ . '/includes/site-header.php';
 ?>
-  <main class="category-page collection-page" data-collection-page data-category-slug="<?= htmlspecialchars((string) ($categorySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-entity-slug="<?= htmlspecialchars((string) ($entitySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>" data-collection-slug="<?= htmlspecialchars((string) ($collectionSlug ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+  <main
+    class="category-page collection-page"
+    data-collection-page
+    data-category-slug="<?= htmlspecialchars((string) ($categorySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+    data-entity-slug="<?= htmlspecialchars((string) ($entitySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+    data-collection-slug="<?= htmlspecialchars((string) ($collectionSlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+  >
     <section class="category-hero collection-hero">
       <div class="category-hero__content">
         <p class="category-hero__eyebrow" data-collection-eyebrow>Collection detail</p>
         <h1 data-collection-name><?= htmlspecialchars($collectionTitle, ENT_QUOTES, 'UTF-8') ?></h1>
-        <p class="category-hero__description" data-collection-description>Cargando coleccion...</p>
+        <p class="category-hero__description" data-collection-description>Cargando colección...</p>
 
         <div class="category-hero__actions">
-          <a href="#collection-pieces">Explore pieces</a>
-          <a href="./index.php#collections">Back to categories</a>
+          <a href="#collection-content" data-collection-primary-action>Explore collection</a>
+          <a href="./index.php#collections" data-collection-parent-link>Return to entity</a>
         </div>
       </div>
 
-      <div class="category-hero__panel">
+      <div class="category-hero__panel" data-collection-hero-panel>
         <div class="category-hero__panel-copy">
           <p>Collection focus</p>
           <strong data-collection-entity>Loading entity</strong>
@@ -62,30 +68,9 @@ require __DIR__ . '/includes/site-header.php';
       </div>
     </section>
 
-    <section id="collection-pieces" class="category-section">
-      <div class="category-section__header">
-        <div>
-          <p class="category-section__eyebrow">Pieces</p>
-          <h2 data-collection-pieces-title>Pieces</h2>
-        </div>
-        <a data-collection-parent-link href="./index.php#collections">Return to entity</a>
-      </div>
-
-      <p class="category-status" data-collection-status>Cargando piezas...</p>
-      <div class="collection-piece-grid" data-collection-piece-grid></div>
-    </section>
-
-    <section class="category-section">
-      <div class="category-section__header">
-        <div>
-          <p class="category-section__eyebrow">Collection media</p>
-          <h2>General media</h2>
-        </div>
-      </div>
-
-      <p class="category-status" data-collection-media-status>Cargando multimedia...</p>
-      <div class="collection-media-grid" data-collection-media-grid></div>
-    </section>
+    <div id="collection-content" class="collection-sections" data-collection-sections aria-live="polite">
+      <p class="category-status" data-collection-status>Cargando contenido de la colección...</p>
+    </div>
   </main>
 
 <?php require __DIR__ . '/includes/site-footer.php'; ?>
