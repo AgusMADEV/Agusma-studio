@@ -14,6 +14,8 @@ if (root) {
   const parentLink = root.querySelector("[data-collection-parent-link]");
   const primaryAction = root.querySelector("[data-collection-primary-action]");
   const heroPanel = root.querySelector("[data-collection-hero-panel]");
+  const fallbackHeroNode = root.querySelector("[data-collection-fallback-hero]");
+  const fallbackTagsNode = root.querySelector("[data-collection-fallback-tags]");
   const tagsNode = root.querySelector("[data-collection-tags]");
   const sectionsNode = root.querySelector("[data-collection-sections]");
 
@@ -39,7 +41,7 @@ if (root) {
       const sections = Array.isArray(payload.sections) ? payload.sections : [];
 
       renderCollectionHeader({ category, entity, collection, tags, sections });
-      renderCollectionSections({ sections, pieces, media });
+      renderCollectionSections({ sections, pieces, media, category, entity, collection, tags });
     } catch (error) {
       console.error(error);
       renderPageError("No se pudo cargar la colección solicitada.");
@@ -47,6 +49,16 @@ if (root) {
   }
 
   function renderCollectionHeader({ category, entity, collection, tags, sections }) {
+    const hasDynamicHero = sections.some((section) => section.section_type === "hero");
+
+    if (fallbackHeroNode) {
+      fallbackHeroNode.hidden = hasDynamicHero;
+    }
+
+    if (fallbackTagsNode) {
+      fallbackTagsNode.hidden = hasDynamicHero;
+    }
+
     if (nameNode) {
       nameNode.textContent = collection.name || "Collection";
     }
@@ -77,7 +89,7 @@ if (root) {
       );
     }
 
-    const firstContentSection = sections.find((section) => section.section_type !== "intro") || sections[0];
+    const firstContentSection = sections.find((section) => !["hero", "intro"].includes(section.section_type)) || sections.find((section) => section.section_type !== "hero") || sections[0];
     if (primaryAction && firstContentSection) {
       primaryAction.href = `#${sectionDomId(firstContentSection)}`;
     }
@@ -109,7 +121,7 @@ if (root) {
     }
   }
 
-  function renderCollectionSections({ sections, pieces, media }) {
+  function renderCollectionSections({ sections, pieces, media, category, entity, collection, tags }) {
     if (!sectionsNode) return;
 
     sectionsNode.replaceChildren();
@@ -121,8 +133,17 @@ if (root) {
 
     const fragment = document.createDocumentFragment();
 
-    sections.forEach((section) => {
-      const component = createSectionComponent(section, { pieces, media });
+    sections.forEach((section, sectionIndex) => {
+      const component = createSectionComponent(section, {
+        pieces,
+        media,
+        category,
+        entity,
+        collection,
+        tags,
+        sections,
+        sectionIndex,
+      });
       if (component) fragment.append(component);
     });
 
@@ -136,6 +157,7 @@ if (root) {
 
   function createSectionComponent(section, context) {
     const components = {
+      hero: createHeroSection,
       intro: createIntroSection,
       pieces: createPiecesSection,
       gallery: createGallerySection,
@@ -145,6 +167,139 @@ if (root) {
 
     const renderer = components[section.section_type] || createGenericSection;
     return renderer(section, context);
+  }
+
+  function createHeroSection(section, {
+    media,
+    category,
+    entity,
+    collection,
+    tags,
+    sections,
+    sectionIndex,
+  }) {
+    const settings = getSectionSettings(section);
+    const layout = settingChoice(settings, "layout", ["split", "full_bleed", "centered", "minimal"], "split");
+    const height = settingChoice(settings, "height", ["compact", "viewport", "full"], "viewport");
+    const imagePosition = settingChoice(settings, "image_position", ["right", "left", "background"], "right");
+    const fit = settingChoice(settings, "fit", ["cover", "contain"], "cover");
+    const position = settingChoice(settings, "position", ["top", "center", "bottom"], "center");
+    const overlay = settingChoice(settings, "overlay", ["none", "light", "dark"], "dark");
+    const alignment = settingChoice(settings, "alignment", ["left", "center", "right"], "left");
+    const showEntity = settingBoolean(settings, "show_entity", true);
+    const showTags = settingBoolean(settings, "show_tags", true);
+    const showActions = settingBoolean(settings, "show_actions", true);
+    const element = createSectionElement(section, "hero");
+
+    element.classList.add(
+      `collection-builder-hero--layout-${layout}`,
+      `collection-builder-hero--height-${height}`,
+      `collection-builder-hero--image-${imagePosition}`,
+      `collection-builder-hero--fit-${fit}`,
+      `collection-builder-hero--position-${position}`,
+      `collection-builder-hero--overlay-${overlay}`,
+      `collection-builder-hero--align-${alignment}`,
+    );
+
+    const shell = document.createElement("div");
+    shell.className = "collection-builder-hero__shell";
+
+    const content = document.createElement("div");
+    content.className = "collection-builder-hero__content";
+
+    const eyebrowText = section.eyebrow
+      || (showEntity ? [category?.name, entity?.name].filter(Boolean).join(" · ") : "");
+
+    if (eyebrowText) {
+      const eyebrow = document.createElement("p");
+      eyebrow.className = "collection-builder-hero__eyebrow";
+      eyebrow.textContent = eyebrowText;
+      content.append(eyebrow);
+    }
+
+    const title = document.createElement("h1");
+    title.className = "collection-builder-hero__title";
+    title.textContent = section.title || collection?.name || "Collection";
+    content.append(title);
+
+    const descriptionText = section.body
+      || collection?.description
+      || collection?.short_description
+      || "";
+
+    if (descriptionText) {
+      const description = document.createElement("p");
+      description.className = "collection-builder-hero__description";
+      description.textContent = descriptionText;
+      content.append(description);
+    }
+
+    if (showTags && Array.isArray(tags) && tags.length > 0) {
+      const tagList = document.createElement("div");
+      tagList.className = "collection-builder-hero__tags";
+      tagList.append(...tags.map(createTag));
+      content.append(tagList);
+    }
+
+    if (showActions) {
+      const actions = document.createElement("div");
+      actions.className = "collection-builder-hero__actions";
+      const nextSection = sections
+        .slice(sectionIndex + 1)
+        .find((candidate) => candidate.section_type !== "hero");
+
+      if (nextSection) {
+        const primary = document.createElement("a");
+        primary.href = `#${sectionDomId(nextSection)}`;
+        primary.textContent = "Explore collection";
+        actions.append(primary);
+      }
+
+      const parent = document.createElement("a");
+      parent.href = `./entity.php?category=${encodeURIComponent(category?.slug || categorySlug)}&entity=${encodeURIComponent(entity?.slug || entitySlug)}`;
+      parent.textContent = entity?.name ? `Return to ${entity.name}` : "Return to entity";
+      actions.append(parent);
+      content.append(actions);
+    }
+
+    shell.append(content);
+
+    const sectionMedia = media.filter((item) => item.section_key === section.section_key);
+    const featuredMedia = sectionMedia[0] || collectionFallbackMedia(collection, entity);
+
+    if (featuredMedia && layout !== "minimal") {
+      const visual = createMediaFigure(featuredMedia, "collection-builder-hero__visual");
+      const asset = visual.querySelector("img, video");
+
+      if (asset instanceof HTMLImageElement) {
+        asset.loading = "eager";
+        asset.fetchPriority = "high";
+      }
+
+      shell.append(visual);
+    } else {
+      element.classList.add("collection-builder-hero--without-image");
+    }
+
+    element.append(shell);
+    return element;
+  }
+
+  function collectionFallbackMedia(collection, entity) {
+    const fileUrl = collection?.cover_image
+      || collection?.thumbnail_image
+      || entity?.cover_image
+      || null;
+
+    if (!fileUrl) return null;
+
+    return {
+      media_type: "image",
+      file_url: fileUrl,
+      thumbnail_url: fileUrl,
+      alt_text: collection?.name || entity?.name || "Collection hero",
+      title: collection?.name || "Collection hero",
+    };
   }
 
   function createIntroSection(section) {

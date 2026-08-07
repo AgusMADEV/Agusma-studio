@@ -33,16 +33,35 @@ function adminLoadDashboardData(PDO $connection): array
         ORDER BY c.display_order ASC, e.display_order ASC, e.id ASC"
     )->fetchAll();
 
+    $templates = $connection->query(
+        "SELECT t.id, t.name, t.slug, t.description, t.preview_image, t.display_order, t.is_active,
+                t.created_at, t.updated_at,
+                (SELECT COUNT(*) FROM collection_template_sections ts WHERE ts.template_id = t.id) AS section_count
+         FROM collection_templates t
+         ORDER BY t.display_order ASC, t.id ASC"
+    )->fetchAll();
+
+    $templateSections = $connection->query(
+        "SELECT ts.id, ts.template_id, ts.section_key, ts.section_type, ts.eyebrow, ts.title, ts.body,
+                ts.settings_json, ts.display_order, ts.is_active, ts.created_at, ts.updated_at,
+                t.name AS template_name
+         FROM collection_template_sections ts
+         INNER JOIN collection_templates t ON t.id = ts.template_id
+         ORDER BY t.display_order ASC, ts.display_order ASC, ts.id ASC"
+    )->fetchAll();
+
     $collections = $connection->query(
         "SELECT col.id, col.entity_id, col.name, col.slug, col.subtitle, col.collection_year, col.season,
                 col.short_description, col.description, col.concept, col.cover_image, col.thumbnail_image,
                 col.primary_color, col.secondary_color, col.background_color, col.text_color, col.image_variant,
-            col.layout_style, col.display_order, col.is_featured, col.is_active, col.published_at,
-            col.created_at, col.updated_at,
-                e.name AS entity_name, e.slug AS entity_slug, e.entity_type, c.name AS category_name, c.slug AS category_slug
+                col.layout_style, col.template_id, col.display_order, col.is_featured, col.is_active, col.published_at,
+                col.created_at, col.updated_at,
+                e.name AS entity_name, e.slug AS entity_slug, e.entity_type, c.name AS category_name, c.slug AS category_slug,
+                t.name AS template_name
         FROM collections col
         INNER JOIN entities e ON e.id = col.entity_id
         INNER JOIN categories c ON c.id = e.category_id
+        LEFT JOIN collection_templates t ON t.id = col.template_id
         ORDER BY c.display_order ASC, e.display_order ASC, col.display_order ASC, col.id ASC"
     )->fetchAll();
 
@@ -92,6 +111,8 @@ function adminLoadDashboardData(PDO $connection): array
     return [
         'categories' => $categories,
         'entities' => $entities,
+        'templates' => $templates,
+        'templateSections' => $templateSections,
         'collections' => $collections,
         'sections' => $sections,
         'pieces' => $pieces,

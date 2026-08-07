@@ -41,7 +41,7 @@ require __DIR__ . '/includes/site-header.php';
     data-entity-slug="<?= htmlspecialchars((string) ($entitySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
     data-collection-slug="<?= htmlspecialchars((string) ($collectionSlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
   >
-    <section class="category-hero collection-hero">
+    <section class="category-hero collection-hero" data-collection-fallback-hero>
       <div class="category-hero__content">
         <p class="category-hero__eyebrow" data-collection-eyebrow>Collection detail</p>
         <h1 data-collection-name><?= htmlspecialchars($collectionTitle, ENT_QUOTES, 'UTF-8') ?></h1>
@@ -61,7 +61,7 @@ require __DIR__ . '/includes/site-header.php';
       </div>
     </section>
 
-    <section class="collection-tags" aria-label="Collection tags">
+    <section class="collection-tags" aria-label="Collection tags" data-collection-fallback-tags>
       <p class="category-section__eyebrow">Tags</p>
       <div class="collection-tags__list" data-collection-tags>
         <span class="collection-tag">Cargando</span>

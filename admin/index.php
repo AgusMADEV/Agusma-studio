@@ -11,6 +11,8 @@ $connection = databaseConnection();
 $dashboard = adminLoadDashboardData($connection);
 $categories = $dashboard['categories'];
 $entities = $dashboard['entities'];
+$templates = $dashboard['templates'];
+$templateSections = $dashboard['templateSections'];
 $collections = $dashboard['collections'];
 $sections = $dashboard['sections'];
 $pieces = $dashboard['pieces'];
@@ -20,6 +22,11 @@ $flashMessage = trim((string) ($_GET['message'] ?? ''));
 $requestedDetailId = trim((string) ($_GET['detail'] ?? ''));
 $mediaBySection = [];
 $unassignedMediaByCollection = [];
+$templateSectionsByTemplate = [];
+
+foreach ($templateSections as $templateSection) {
+    $templateSectionsByTemplate[(int) $templateSection['template_id']][] = $templateSection;
+}
 
 foreach ($mediaItems as $mediaItem) {
     if ($mediaItem['piece_id'] !== null) {
@@ -39,6 +46,7 @@ foreach ($mediaItems as $mediaItem) {
 
 $totalCategories = count($categories);
 $totalEntities = count($entities);
+$totalTemplates = count($templates);
 $totalCollections = count($collections);
 $totalSections = count($sections);
 $totalPieces = count($pieces);
@@ -68,6 +76,7 @@ $totalMedia = count($mediaItems);
         <a class="admin-sidebar-link" href="#categorias" data-admin-nav><span class="admin-sidebar-icon"></span><span>Categorias</span></a>
         <a class="admin-sidebar-link" href="#entidades" data-admin-nav><span class="admin-sidebar-icon"></span><span>Entidades</span></a>
         <a class="admin-sidebar-link" href="#colecciones" data-admin-nav><span class="admin-sidebar-icon"></span><span>Colecciones</span></a>
+        <a class="admin-sidebar-link" href="#plantillas" data-admin-nav><span class="admin-sidebar-icon"></span><span>Plantillas</span></a>
         <a class="admin-sidebar-link" href="#secciones" data-admin-nav><span class="admin-sidebar-icon"></span><span>Secciones</span></a>
         <a class="admin-sidebar-link" href="#piezas" data-admin-nav><span class="admin-sidebar-icon"></span><span>Piezas</span></a>
         <a class="admin-sidebar-link" href="#multimedia" data-admin-nav><span class="admin-sidebar-icon"></span><span>Multimedia</span></a>
@@ -131,6 +140,11 @@ $totalMedia = count($mediaItems);
               <span>colecciones</span>
               <strong><?= $totalCollections ?></strong>
               <p>Conjuntos publicados o en proceso.</p>
+            </article>
+            <article class="admin-summary-card">
+              <span>plantillas</span>
+              <strong><?= $totalTemplates ?></strong>
+              <p>Estructuras reutilizables para nuevas colecciones.</p>
             </article>
             <article class="admin-summary-card">
               <span>secciones</span>
@@ -231,6 +245,17 @@ $totalMedia = count($mediaItems);
                     <?php endforeach; ?>
                   </select>
                 </label>
+                <label>Plantilla inicial
+                  <select name="template_id">
+                    <option value="">Coleccion vacia</option>
+                    <?php foreach ($templates as $template): ?>
+                      <?php if ((int) $template['is_active'] === 1): ?>
+                        <option value="<?= (int) $template['id'] ?>"><?= adminEscape((string) $template['name']) ?> · <?= (int) $template['section_count'] ?> secciones</option>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
+                <p class="admin-upload-hint">La plantilla solo se copia al crear la coleccion. Los cambios posteriores son independientes.</p>
                 <label>Nombre<input type="text" name="name" required /></label>
                 <label>Slug<input type="text" name="slug" required /></label>
                 <label>Subtitle<input type="text" name="subtitle" /></label>
@@ -256,6 +281,20 @@ $totalMedia = count($mediaItems);
             </section>
 
 
+            <section class="admin-card admin-card--form">
+              <h3>Nueva plantilla</h3>
+              <form method="post" class="admin-form">
+                <input type="hidden" name="action" value="create_template" />
+                <label>Nombre<input type="text" name="name" required /></label>
+                <label>Slug<input type="text" name="slug" required /></label>
+                <label>Descripcion<textarea name="description"></textarea></label>
+                <label>Imagen de vista previa<input type="text" name="preview_image" /></label>
+                <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
+                <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
+                <button type="submit">Crear plantilla</button>
+              </form>
+            </section>
+
             <section class="admin-card admin-card--form" id="crear-seccion">
               <h3>Nueva seccion</h3>
               <form method="post" class="admin-form" data-section-settings-form>
@@ -278,7 +317,7 @@ $totalMedia = count($mediaItems);
                 <label>Eyebrow<input type="text" name="eyebrow" placeholder="Campaign" /></label>
                 <label>Titulo<input type="text" name="title" /></label>
                 <label>Contenido<textarea name="body"></textarea></label>
-                <?= adminRenderSectionVisualSettings('intro') ?>
+                <?= adminRenderSectionVisualSettings('hero') ?>
                 <label>Orden<input type="number" name="display_order" min="0" placeholder="Automatico" /></label>
                 <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
                 <button type="submit">Crear seccion</button>
@@ -469,7 +508,7 @@ $totalMedia = count($mediaItems);
                     <div class="admin-detail-actions-label">Acciones rapidas</div>
                     <div class="admin-detail-actions-quick">
                       <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
-                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="submit" name="submit_action" value="duplicate_category" class="admin-link admin-link--ghost" formnovalidate>Duplicar</button>
                       <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
                     </div>
                     <div class="admin-detail-editor" data-admin-editable hidden>
@@ -649,7 +688,7 @@ $totalMedia = count($mediaItems);
                     <div class="admin-detail-actions-label">Acciones rapidas</div>
                     <div class="admin-detail-actions-quick">
                       <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
-                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="submit" name="submit_action" value="duplicate_entity" class="admin-link admin-link--ghost" formnovalidate>Duplicar</button>
                       <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
                     </div>
                     <div class="admin-detail-editor" data-admin-editable hidden>
@@ -835,6 +874,7 @@ $totalMedia = count($mediaItems);
                         <div><span>Nombre</span><strong><?= adminEscape($collection['name']) ?></strong></div>
                         <div><span>Slug</span><strong><?= adminEscape($collection['slug']) ?></strong></div>
                         <div><span>Entidad</span><strong><?= adminEscape((string) ($collection['entity_name'] ?? 'Sin entidad')) ?></strong></div>
+                        <div><span>Plantilla de origen</span><strong><?= adminEscape((string) ($collection['template_name'] ?? 'Coleccion vacia')) ?></strong></div>
                         <div><span>Ano</span><strong><?= !empty($collection['collection_year']) ? (int) $collection['collection_year'] : 'n/a' ?></strong></div>
                         <div><span>Resumen / descripcion</span><strong><?= adminEscape($collectionSummary) ?></strong></div>
                         <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $collection['updated_at'])) ?></strong></div>
@@ -843,7 +883,8 @@ $totalMedia = count($mediaItems);
                     <div class="admin-detail-actions-label">Acciones rapidas</div>
                     <div class="admin-detail-actions-quick">
                       <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
-                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="submit" name="submit_action" value="duplicate_collection" class="admin-link admin-link--ghost" formnovalidate>Duplicar</button>
+                      <button type="submit" name="submit_action" value="save_collection_as_template" class="admin-link admin-link--ghost" formnovalidate>Guardar como plantilla</button>
                       <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
                     </div>
                     <div class="admin-detail-editor" data-admin-editable hidden>
@@ -931,6 +972,232 @@ $totalMedia = count($mediaItems);
           </div>
         </section>
 
+
+        <section class="admin-panel" id="plantillas" data-admin-panel data-selected-detail-id="<?= adminEscape(str_starts_with($requestedDetailId, 'template-') ? $requestedDetailId : '') ?>">
+          <div class="admin-section-title">
+            <div>
+              <p class="admin-eyebrow">Plantillas</p>
+              <h2>Estructuras reutilizables</h2>
+            </div>
+            <p>Crea presets de secciones y aplicalos como punto de partida al crear nuevas colecciones.</p>
+          </div>
+
+          <div class="admin-panel-toolbar">
+            <label class="admin-search-field">Buscar<input type="search" placeholder="Nombre, slug o descripcion" data-admin-search /></label>
+            <label>Estado
+              <select data-admin-status-filter>
+                <option value="all">Todas</option>
+                <option value="active">Activas</option>
+                <option value="inactive">Inactivas</option>
+              </select>
+            </label>
+            <label>Orden
+              <select data-admin-sort>
+                <option value="order-asc">Orden ascendente</option>
+                <option value="order-desc">Orden descendente</option>
+                <option value="name-asc">Nombre A-Z</option>
+                <option value="name-desc">Nombre Z-A</option>
+              </select>
+            </label>
+            <a class="admin-link admin-link--button" href="#crear-contenido">Nueva plantilla</a>
+          </div>
+
+          <div class="admin-master-detail" data-admin-master-detail>
+            <div class="admin-list-column admin-master-detail-main">
+              <div class="admin-list-head admin-list-head--collections">
+                <span>Plantilla</span><span>Slug</span><span>Secciones</span><span>Estado</span>
+              </div>
+              <div class="admin-record-list">
+                <?php foreach ($templates as $template): ?>
+                  <?php $templatePreview = adminRecordPreviewImage($template, ['preview_image']); ?>
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="template-<?= (int) $template['id'] ?>" data-active="<?= (int) $template['is_active'] ?>" data-featured="0" data-order="<?= (int) $template['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $template['name'])) ?>" aria-controls="detail-template-<?= (int) $template['id'] ?>">
+                    <span class="admin-item-main">
+                      <span class="admin-item-media<?= $templatePreview === '' ? ' is-empty' : '' ?>">
+                        <?php if ($templatePreview !== ''): ?>
+                          <img src="<?= adminEscape($templatePreview) ?>" alt="<?= adminEscape($template['name']) ?>" loading="lazy" />
+                        <?php else: ?>
+                          <span><?= adminEscape(strtoupper(substr((string) $template['name'], 0, 1))) ?></span>
+                        <?php endif; ?>
+                      </span>
+                      <span class="admin-item-copy">
+                        <span class="admin-item-kicker">Preset de coleccion</span>
+                        <span class="admin-item-title"><?= adminEscape($template['name']) ?></span>
+                        <span class="admin-item-summary"><?= adminEscape(adminFirstNonEmpty([(string) $template['description']], 'Sin descripcion.')) ?></span>
+                      </span>
+                    </span>
+                    <span class="admin-item-cell"><?= adminEscape($template['slug']) ?></span>
+                    <span class="admin-item-cell"><?= (int) $template['section_count'] ?></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $template['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                  </button>
+                <?php endforeach; ?>
+              </div>
+              <p class="admin-no-results" data-admin-no-results hidden>No hay plantillas que coincidan con los filtros.</p>
+              <p class="admin-list-foot">Mostrando <?= count($templates) ?> plantillas</p>
+            </div>
+
+            <div class="admin-detail-column">
+              <p class="admin-detail-empty" data-admin-empty-detail hidden>Selecciona una plantilla para editar su estructura.</p>
+              <?php foreach ($templates as $template): ?>
+                <?php
+                  $templateId = (int) $template['id'];
+                  $currentTemplateSections = $templateSectionsByTemplate[$templateId] ?? [];
+                  $templatePreview = adminRecordPreviewImage($template, ['preview_image']);
+                ?>
+                <div class="admin-detail-panel" data-admin-detail-panel data-detail-id="template-<?= $templateId ?>" id="detail-template-<?= $templateId ?>" hidden>
+                  <div class="admin-detail-card">
+                    <div class="admin-detail-topbar">
+                      <p>Detalle de plantilla</p>
+                      <button type="button" class="admin-detail-close" data-admin-close-detail aria-label="Cerrar detalle">x</button>
+                    </div>
+                    <div class="admin-detail-hero<?= $templatePreview === '' ? ' is-empty' : '' ?>">
+                      <?php if ($templatePreview !== ''): ?>
+                        <img src="<?= adminEscape($templatePreview) ?>" alt="<?= adminEscape($template['name']) ?>" loading="lazy" />
+                      <?php else: ?>
+                        <span><?= adminEscape((string) $template['name']) ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="admin-edit-intro">
+                      <h3>Editar plantilla</h3>
+                      <p>Los cambios afectan a futuras colecciones, no a las que ya fueron creadas.</p>
+                    </div>
+                    <div class="admin-edit-meta">
+                      <span class="admin-status-badge"><?= (int) $template['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-edit-chip"><?= count($currentTemplateSections) ?> secciones</span>
+                    </div>
+                    <div class="admin-detail-copy">
+                      <div class="admin-detail-readonly">
+                        <div><span>Nombre</span><strong><?= adminEscape($template['name']) ?></strong></div>
+                        <div><span>Slug</span><strong><?= adminEscape($template['slug']) ?></strong></div>
+                        <div><span>Secciones</span><strong><?= count($currentTemplateSections) ?></strong></div>
+                        <div><span>Descripcion</span><strong><?= adminEscape(adminFirstNonEmpty([(string) $template['description']], 'Sin descripcion.')) ?></strong></div>
+                      </div>
+                    </div>
+                    <div class="admin-detail-actions-label">Acciones rapidas</div>
+                    <div class="admin-detail-actions-quick">
+                      <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <form method="post" class="admin-inline-form">
+                        <input type="hidden" name="action" value="duplicate_template" />
+                        <input type="hidden" name="id" value="<?= $templateId ?>" />
+                        <button type="submit" class="admin-link admin-link--ghost">Duplicar</button>
+                      </form>
+                      <form method="post" class="admin-inline-form" onsubmit="return confirm('¿Eliminar esta plantilla y todas sus secciones?');">
+                        <input type="hidden" name="action" value="delete_template" />
+                        <input type="hidden" name="id" value="<?= $templateId ?>" />
+                        <button type="submit" class="admin-link admin-link--ghost">Eliminar</button>
+                      </form>
+                    </div>
+
+                    <form method="post" class="admin-detail-editor" data-admin-editable hidden>
+                      <input type="hidden" name="action" value="update_template" />
+                      <input type="hidden" name="id" value="<?= $templateId ?>" />
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Nombre<input type="text" name="name" value="<?= adminEscape($template['name']) ?>" required /></label>
+                        <label class="admin-detail-field">Slug<input type="text" name="slug" value="<?= adminEscape($template['slug']) ?>" required /></label>
+                      </div>
+                      <div class="admin-detail-editor-row">
+                        <label class="admin-detail-field">Descripcion<textarea name="description"><?= adminEscape($template['description']) ?></textarea></label>
+                      </div>
+                      <div class="admin-detail-editor-row admin-detail-editor-row--split">
+                        <label class="admin-detail-field">Imagen de vista previa<input type="text" name="preview_image" value="<?= adminEscape($template['preview_image']) ?>" /></label>
+                        <label class="admin-detail-field admin-detail-field--compact">Orden<input type="number" name="display_order" value="<?= (int) $template['display_order'] ?>" min="0" /></label>
+                      </div>
+                      <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked((int) $template['is_active'] === 1) ?> /> Activa</label>
+                      <div class="admin-detail-editor-actions">
+                        <button type="button" class="admin-link admin-link--ghost" data-admin-cancel-edit>Cancelar</button>
+                        <button type="submit" class="admin-link admin-link--button">Guardar plantilla</button>
+                      </div>
+                    </form>
+
+                    <section class="admin-template-sections-manager">
+                      <div class="admin-section-media-heading">
+                        <div>
+                          <p class="admin-eyebrow">Estructura</p>
+                          <h3>Secciones de la plantilla</h3>
+                        </div>
+                        <span class="admin-section-media-count"><?= count($currentTemplateSections) ?> bloques</span>
+                      </div>
+
+                      <div class="admin-template-section-list">
+                        <?php foreach ($currentTemplateSections as $templateSectionIndex => $templateSection): ?>
+                          <details class="admin-template-section-item">
+                            <summary>
+                              <span class="admin-template-section-order"><?= (int) $templateSection['display_order'] ?></span>
+                              <span>
+                                <strong><?= adminEscape((string) ($templateSection['title'] ?: $templateSection['section_key'])) ?></strong>
+                                <small><?= adminEscape((string) $templateSection['section_type']) ?> · <?= adminEscape((string) $templateSection['section_key']) ?></small>
+                              </span>
+                              <span class="admin-status-badge"><?= (int) $templateSection['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                            </summary>
+                            <form method="post" class="admin-template-section-form" data-section-settings-form>
+                              <input type="hidden" name="action" value="update_template_section" />
+                              <input type="hidden" name="id" value="<?= (int) $templateSection['id'] ?>" />
+                              <input type="hidden" name="template_id" value="<?= $templateId ?>" />
+                              <div class="admin-section-media-form-grid">
+                                <label>Tipo
+                                  <select name="section_type" required data-section-type-select>
+                                    <?php foreach (adminSectionTypeOptions() as $sectionType => $sectionTypeLabel): ?>
+                                      <option value="<?= adminEscape($sectionType) ?>" <?= adminSelected($templateSection['section_type'], $sectionType) ?>><?= adminEscape($sectionTypeLabel) ?></option>
+                                    <?php endforeach; ?>
+                                  </select>
+                                </label>
+                                <label>Section key<input type="text" name="section_key" value="<?= adminEscape($templateSection['section_key']) ?>" required /></label>
+                              </div>
+                              <div class="admin-section-media-form-grid">
+                                <label>Eyebrow<input type="text" name="eyebrow" value="<?= adminEscape($templateSection['eyebrow']) ?>" /></label>
+                                <label>Titulo<input type="text" name="title" value="<?= adminEscape($templateSection['title']) ?>" /></label>
+                              </div>
+                              <label>Contenido<textarea name="body"><?= adminEscape($templateSection['body']) ?></textarea></label>
+                              <?= adminRenderSectionVisualSettings((string) $templateSection['section_type'], $templateSection['settings_json']) ?>
+                              <div class="admin-section-media-form-grid">
+                                <label>Orden<input type="number" name="display_order" value="<?= (int) $templateSection['display_order'] ?>" min="0" /></label>
+                                <label class="admin-checkbox"><input type="checkbox" name="is_active" <?= adminChecked((int) $templateSection['is_active'] === 1) ?> /> Activa</label>
+                              </div>
+                              <div class="admin-template-section-actions">
+                                <button type="submit" name="submit_action" value="update_template_section" class="admin-media-action">Guardar</button>
+                                <button type="submit" name="submit_action" value="move_template_section_up" class="admin-media-action" formnovalidate <?= $templateSectionIndex === 0 ? 'disabled' : '' ?>>Subir</button>
+                                <button type="submit" name="submit_action" value="move_template_section_down" class="admin-media-action" formnovalidate <?= $templateSectionIndex === count($currentTemplateSections) - 1 ? 'disabled' : '' ?>>Bajar</button>
+                                <button type="submit" name="submit_action" value="delete_template_section" class="admin-media-action admin-media-action--danger" formnovalidate onclick="return confirm('¿Eliminar esta seccion de la plantilla?');">Eliminar</button>
+                              </div>
+                            </form>
+                          </details>
+                        <?php endforeach; ?>
+                      </div>
+
+                      <details class="admin-template-section-item admin-template-section-item--new">
+                        <summary><span class="admin-template-section-order">+</span><span><strong>Añadir seccion</strong><small>Nuevo bloque reutilizable</small></span></summary>
+                        <form method="post" class="admin-template-section-form" data-section-settings-form>
+                          <input type="hidden" name="action" value="create_template_section" />
+                          <input type="hidden" name="template_id" value="<?= $templateId ?>" />
+                          <div class="admin-section-media-form-grid">
+                            <label>Tipo
+                              <select name="section_type" required data-section-type-select>
+                                <?php foreach (adminSectionTypeOptions() as $sectionType => $sectionTypeLabel): ?>
+                                  <option value="<?= adminEscape($sectionType) ?>"><?= adminEscape($sectionTypeLabel) ?></option>
+                                <?php endforeach; ?>
+                              </select>
+                            </label>
+                            <label>Section key<input type="text" name="section_key" placeholder="campaign" required /></label>
+                          </div>
+                          <div class="admin-section-media-form-grid">
+                            <label>Eyebrow<input type="text" name="eyebrow" /></label>
+                            <label>Titulo<input type="text" name="title" /></label>
+                          </div>
+                          <label>Contenido<textarea name="body"></textarea></label>
+                          <?= adminRenderSectionVisualSettings('hero') ?>
+                          <div class="admin-section-media-form-grid">
+                            <label>Orden<input type="number" name="display_order" min="0" placeholder="Automatico" /></label>
+                            <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
+                          </div>
+                          <button type="submit" class="admin-link admin-link--button">Añadir seccion</button>
+                        </form>
+                      </details>
+                    </section>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </section>
 
         <section class="admin-panel" id="secciones" data-admin-panel data-selected-detail-id="<?= adminEscape(str_starts_with($requestedDetailId, 'section-') ? $requestedDetailId : '') ?>">
           <div class="admin-master-detail" data-admin-master-detail>
@@ -1346,7 +1613,7 @@ $totalMedia = count($mediaItems);
                     <div class="admin-detail-actions-label">Acciones rapidas</div>
                     <div class="admin-detail-actions-quick">
                       <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
-                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="submit" name="submit_action" value="duplicate_piece" class="admin-link admin-link--ghost" formnovalidate>Duplicar</button>
                       <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
                     </div>
                     <div class="admin-detail-editor" data-admin-editable hidden>
@@ -1532,7 +1799,7 @@ $totalMedia = count($mediaItems);
                     <div class="admin-detail-actions-label">Acciones rapidas</div>
                     <div class="admin-detail-actions-quick">
                       <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
-                      <button type="button" class="admin-link admin-link--ghost" disabled>Duplicar</button>
+                      <button type="submit" name="submit_action" value="duplicate_media" class="admin-link admin-link--ghost" formnovalidate>Duplicar</button>
                       <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
                     </div>
                     <div class="admin-detail-editor" data-admin-editable hidden>

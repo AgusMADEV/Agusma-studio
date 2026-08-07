@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 function adminSaveRecord(PDO $connection, string $table, array $data, ?int $id = null): int
 {
-    $allowedTables = ['categories', 'entities', 'collections', 'collection_sections', 'pieces', 'media'];
+    $allowedTables = ['categories', 'entities', 'collections', 'collection_sections', 'collection_templates', 'collection_template_sections', 'pieces', 'media'];
 
     if (!in_array($table, $allowedTables, true)) {
         throw new InvalidArgumentException('Tabla no permitida.');
@@ -42,7 +42,7 @@ function adminSaveRecord(PDO $connection, string $table, array $data, ?int $id =
 
 function adminDeleteRecord(PDO $connection, string $table, int $id): void
 {
-    $allowedTables = ['categories', 'entities', 'collections', 'collection_sections', 'pieces', 'media'];
+    $allowedTables = ['categories', 'entities', 'collections', 'collection_sections', 'collection_templates', 'collection_template_sections', 'pieces', 'media'];
 
     if (!in_array($table, $allowedTables, true)) {
         throw new InvalidArgumentException('Tabla no permitida.');
@@ -50,6 +50,686 @@ function adminDeleteRecord(PDO $connection, string $table, int $id): void
 
     $statement = $connection->prepare(sprintf('DELETE FROM %s WHERE id = :id', $table));
     $statement->execute([':id' => $id]);
+}
+
+function adminFetchRecordById(PDO $connection, string $table, int $id): array
+{
+    $allowedTables = ['categories', 'entities', 'collections', 'collection_sections', 'collection_templates', 'collection_template_sections', 'pieces', 'media'];
+
+    if (!in_array($table, $allowedTables, true)) {
+        throw new InvalidArgumentException('Tabla no permitida.');
+    }
+
+    $statement = $connection->prepare(sprintf('SELECT * FROM %s WHERE id = :id LIMIT 1', $table));
+    $statement->execute([':id' => $id]);
+    $record = $statement->fetch(PDO::FETCH_ASSOC);
+
+    if (!is_array($record)) {
+        throw new InvalidArgumentException('No se ha encontrado el registro a duplicar.');
+    }
+
+    return $record;
+}
+
+function adminNextDisplayOrder(PDO $connection, string $table, array $scope = []): int
+{
+    $allowedTables = ['categories', 'entities', 'collections', 'collection_sections', 'collection_templates', 'collection_template_sections', 'pieces', 'media'];
+
+    if (!in_array($table, $allowedTables, true)) {
+        throw new InvalidArgumentException('Tabla no permitida.');
+    }
+
+    $conditions = [];
+    $parameters = [];
+
+    foreach ($scope as $column => $value) {
+        if ($value === null) {
+            $conditions[] = sprintf('%s IS NULL', $column);
+            continue;
+        }
+
+        $placeholder = ':' . $column;
+        $conditions[] = sprintf('%s = %s', $column, $placeholder);
+        $parameters[$placeholder] = $value;
+    }
+
+    $sql = sprintf('SELECT COALESCE(MAX(display_order), 0) + 1 FROM %s', $table);
+
+    if ($conditions !== []) {
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+    }
+
+    $statement = $connection->prepare($sql);
+    $statement->execute($parameters);
+
+    return max(1, (int) $statement->fetchColumn());
+}
+
+function adminBuildCopyLabel(string $value): string
+{
+    $trimmed = trim($value);
+
+    if ($trimmed === '') {
+        return $value;
+    }
+
+    return $trimmed . ' (copia)';
+}
+
+function adminTrimSlugBase(string $slug, string $suffix, int $maxLength): string
+{
+    $limit = $maxLength - strlen($suffix);
+
+    if ($limit <= 0) {
+        throw new InvalidArgumentException('El limite de longitud del slug no permite generar una copia valida.');
+    }
+
+    $base = substr($slug, 0, $limit);
+    $base = rtrim($base, '-_');
+
+    return $base !== '' ? $base : substr($slug, 0, min(strlen($slug), $limit));
+}
+
+function adminGenerateUniqueScopedSlug(
+    PDO $connection,
+    string $table,
+    string $slugColumn,
+    string $baseSlug,
+    int $maxLength,
+    array $scope = []
+): string {
+    $allowedTables = ['categories', 'entities', 'collections', 'collection_templates', 'pieces'];
+
+    if (!in_array($table, $allowedTables, true)) {
+        throw new InvalidArgumentException('Tabla no permitida para duplicar slugs.');
+    }
+
+    for ($attempt = 1; $attempt <= 100; $attempt++) {
+        $suffix = $attempt === 1 ? '-copy' : '-copy-' . $attempt;
+        $candidate = adminTrimSlugBase($baseSlug, $suffix, $maxLength) . $suffix;
+        $conditions = [sprintf('%s = :slug', $slugColumn)];
+        $parameters = [':slug' => $candidate];
+
+        foreach ($scope as $column => $value) {
+            $placeholder = ':' . $column;
+            $conditions[] = sprintf('%s = %s', $column, $placeholder);
+            $parameters[$placeholder] = $value;
+        }
+
+        $statement = $connection->prepare(
+            sprintf('SELECT id FROM %s WHERE %s LIMIT 1', $table, implode(' AND ', $conditions))
+        );
+        $statement->execute($parameters);
+
+        if ($statement->fetchColumn() === false) {
+            return $candidate;
+        }
+    }
+
+    throw new RuntimeException('No se pudo generar un slug unico para la copia.');
+}
+
+function adminBuildDuplicateData(PDO $connection, string $table, int $id): array
+{
+    $record = adminFetchRecordById($connection, $table, $id);
+    unset($record['id'], $record['created_at'], $record['updated_at']);
+
+    if (isset($record['name']) && is_string($record['name'])) {
+        $record['name'] = adminBuildCopyLabel($record['name']);
+    }
+
+    if (isset($record['title']) && is_string($record['title']) && $record['title'] !== '') {
+        $record['title'] = adminBuildCopyLabel($record['title']);
+    }
+
+    if (array_key_exists('is_active', $record)) {
+        $record['is_active'] = 0;
+    }
+
+    if (array_key_exists('is_featured', $record)) {
+        $record['is_featured'] = 0;
+    }
+
+    if (array_key_exists('is_cover', $record)) {
+        $record['is_cover'] = 0;
+    }
+
+    switch ($table) {
+        case 'categories':
+            $record['slug'] = adminGenerateUniqueScopedSlug($connection, 'categories', 'slug', (string) $record['slug'], 120);
+            $record['display_order'] = adminNextDisplayOrder($connection, 'categories');
+            break;
+        case 'entities':
+            $record['slug'] = adminGenerateUniqueScopedSlug(
+                $connection,
+                'entities',
+                'slug',
+                (string) $record['slug'],
+                150,
+                ['category_id' => (int) $record['category_id']]
+            );
+            $record['display_order'] = adminNextDisplayOrder(
+                $connection,
+                'entities',
+                ['category_id' => (int) $record['category_id']]
+            );
+            break;
+        case 'collections':
+            $record['slug'] = adminGenerateUniqueScopedSlug(
+                $connection,
+                'collections',
+                'slug',
+                (string) $record['slug'],
+                180,
+                ['entity_id' => (int) $record['entity_id']]
+            );
+            $record['display_order'] = adminNextDisplayOrder(
+                $connection,
+                'collections',
+                ['entity_id' => (int) $record['entity_id']]
+            );
+            $record['published_at'] = null;
+            break;
+        case 'pieces':
+            $record['slug'] = adminGenerateUniqueScopedSlug(
+                $connection,
+                'pieces',
+                'slug',
+                (string) $record['slug'],
+                180,
+                ['collection_id' => (int) $record['collection_id']]
+            );
+            $record['display_order'] = adminNextDisplayOrder(
+                $connection,
+                'pieces',
+                ['collection_id' => (int) $record['collection_id']]
+            );
+            break;
+        case 'media':
+            $record['display_order'] = adminNextMediaOrder(
+                $connection,
+                (int) $record['collection_id'],
+                $record['section_key'] !== null && $record['section_key'] !== '' ? (string) $record['section_key'] : null,
+                $record['piece_id'] !== null ? (int) $record['piece_id'] : null
+            );
+            break;
+    }
+
+    return $record;
+}
+
+function adminDuplicateRecord(PDO $connection, string $table, int $id): int
+{
+    return adminSaveRecord($connection, $table, adminBuildDuplicateData($connection, $table, $id), null);
+}
+
+function adminDuplicateCollectionSections(PDO $connection, int $sourceCollectionId, int $newCollectionId): int
+{
+    $statement = $connection->prepare(
+        'SELECT section_key, section_type, eyebrow, title, body, settings_json, display_order, is_active
+         FROM collection_sections
+         WHERE collection_id = :collection_id
+         ORDER BY display_order ASC, id ASC'
+    );
+    $statement->execute([':collection_id' => $sourceCollectionId]);
+
+    $sections = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $count = 0;
+
+    foreach ($sections as $section) {
+        adminSaveRecord($connection, 'collection_sections', [
+            'collection_id' => $newCollectionId,
+            'section_key' => (string) $section['section_key'],
+            'section_type' => (string) $section['section_type'],
+            'eyebrow' => $section['eyebrow'],
+            'title' => $section['title'],
+            'body' => $section['body'],
+            'settings_json' => $section['settings_json'],
+            'display_order' => (int) $section['display_order'],
+            'is_active' => (int) $section['is_active'],
+        ]);
+        $count++;
+    }
+
+    return $count;
+}
+
+/**
+ * @return array<int, int> Map of source piece id to duplicated piece id.
+ */
+function adminDuplicateCollectionPieces(PDO $connection, int $sourceCollectionId, int $newCollectionId): array
+{
+    $statement = $connection->prepare(
+        'SELECT id, name, slug, piece_type, subtitle, short_description, description, cover_image,
+                display_order, is_featured, is_active
+         FROM pieces
+         WHERE collection_id = :collection_id
+         ORDER BY display_order ASC, id ASC'
+    );
+    $statement->execute([':collection_id' => $sourceCollectionId]);
+
+    $pieces = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $pieceIdMap = [];
+
+    foreach ($pieces as $piece) {
+        $sourcePieceId = (int) $piece['id'];
+        $newPieceId = adminSaveRecord($connection, 'pieces', [
+            'collection_id' => $newCollectionId,
+            'name' => (string) $piece['name'],
+            'slug' => (string) $piece['slug'],
+            'piece_type' => (string) $piece['piece_type'],
+            'subtitle' => $piece['subtitle'],
+            'short_description' => $piece['short_description'],
+            'description' => $piece['description'],
+            'cover_image' => $piece['cover_image'],
+            'display_order' => (int) $piece['display_order'],
+            'is_featured' => (int) $piece['is_featured'],
+            'is_active' => (int) $piece['is_active'],
+        ]);
+
+        $pieceIdMap[$sourcePieceId] = $newPieceId;
+    }
+
+    return $pieceIdMap;
+}
+
+function adminDuplicateCollectionMedia(
+    PDO $connection,
+    int $sourceCollectionId,
+    int $newCollectionId,
+    array $pieceIdMap
+): int {
+    $statement = $connection->prepare(
+        'SELECT piece_id, media_type, file_url, thumbnail_url, title, alt_text, caption, section_key,
+                display_order, is_cover, is_active
+         FROM media
+         WHERE collection_id = :collection_id
+         ORDER BY display_order ASC, id ASC'
+    );
+    $statement->execute([':collection_id' => $sourceCollectionId]);
+
+    $mediaItems = $statement->fetchAll(PDO::FETCH_ASSOC);
+    $count = 0;
+
+    foreach ($mediaItems as $media) {
+        $sourcePieceId = $media['piece_id'] !== null ? (int) $media['piece_id'] : null;
+        $newPieceId = null;
+
+        if ($sourcePieceId !== null) {
+            if (!array_key_exists($sourcePieceId, $pieceIdMap)) {
+                throw new RuntimeException(
+                    sprintf(
+                        'No se puede duplicar la multimedia: la pieza original %d no pertenece a la coleccion.',
+                        $sourcePieceId
+                    )
+                );
+            }
+
+            $newPieceId = $pieceIdMap[$sourcePieceId];
+        }
+
+        adminSaveRecord($connection, 'media', [
+            'collection_id' => $newCollectionId,
+            'piece_id' => $newPieceId,
+            'media_type' => (string) $media['media_type'],
+            'file_url' => (string) $media['file_url'],
+            'thumbnail_url' => $media['thumbnail_url'],
+            'title' => $media['title'],
+            'alt_text' => $media['alt_text'],
+            'caption' => $media['caption'],
+            'section_key' => $media['section_key'],
+            'display_order' => (int) $media['display_order'],
+            'is_cover' => (int) $media['is_cover'],
+            'is_active' => (int) $media['is_active'],
+        ]);
+        $count++;
+    }
+
+    return $count;
+}
+
+function adminDuplicateCollectionTags(PDO $connection, int $sourceCollectionId, int $newCollectionId): int
+{
+    $select = $connection->prepare(
+        'SELECT tag_id FROM collection_tags WHERE collection_id = :collection_id ORDER BY tag_id ASC'
+    );
+    $select->execute([':collection_id' => $sourceCollectionId]);
+
+    $tagIds = $select->fetchAll(PDO::FETCH_COLUMN);
+    $insert = $connection->prepare(
+        'INSERT INTO collection_tags (collection_id, tag_id) VALUES (:collection_id, :tag_id)'
+    );
+
+    $count = 0;
+
+    foreach ($tagIds as $tagId) {
+        $insert->execute([
+            ':collection_id' => $newCollectionId,
+            ':tag_id' => (int) $tagId,
+        ]);
+        $count++;
+    }
+
+    return $count;
+}
+
+/**
+ * Duplicates the complete collection tree inside the current transaction.
+ * Uploaded files are reused by URL; only their media database rows are copied.
+ *
+ * @return array{collection_id:int, sections:int, pieces:int, media:int, tags:int}
+ */
+function adminDuplicateCollection(PDO $connection, int $sourceCollectionId): array
+{
+    adminAssertCollectionExists($connection, $sourceCollectionId);
+
+    $newCollectionId = adminDuplicateRecord($connection, 'collections', $sourceCollectionId);
+    $sectionCount = adminDuplicateCollectionSections($connection, $sourceCollectionId, $newCollectionId);
+    $pieceIdMap = adminDuplicateCollectionPieces($connection, $sourceCollectionId, $newCollectionId);
+    $mediaCount = adminDuplicateCollectionMedia(
+        $connection,
+        $sourceCollectionId,
+        $newCollectionId,
+        $pieceIdMap
+    );
+    $tagCount = adminDuplicateCollectionTags($connection, $sourceCollectionId, $newCollectionId);
+
+    return [
+        'collection_id' => $newCollectionId,
+        'sections' => $sectionCount,
+        'pieces' => count($pieceIdMap),
+        'media' => $mediaCount,
+        'tags' => $tagCount,
+    ];
+}
+
+function adminAssertTemplateExists(PDO $connection, int $templateId): void
+{
+    $statement = $connection->prepare('SELECT id FROM collection_templates WHERE id = :id');
+    $statement->execute([':id' => $templateId]);
+
+    if ($statement->fetchColumn() === false) {
+        throw new InvalidArgumentException('La plantilla seleccionada no existe.');
+    }
+}
+
+function adminBuildTemplateData(): array
+{
+    return [
+        'name' => adminPostString('name'),
+        'slug' => adminRequireSlug(adminPostString('slug')),
+        'description' => adminPostNullableString('description'),
+        'preview_image' => adminPostNullableString('preview_image'),
+        'display_order' => adminPostInt('display_order'),
+        'is_active' => adminPostBool('is_active'),
+    ];
+}
+
+function adminAssertTemplateSectionKeyAvailable(
+    PDO $connection,
+    int $templateId,
+    string $sectionKey,
+    ?int $excludeId = null
+): void {
+    $sql = 'SELECT id FROM collection_template_sections WHERE template_id = :template_id AND section_key = :section_key';
+    $parameters = [
+        ':template_id' => $templateId,
+        ':section_key' => $sectionKey,
+    ];
+
+    if ($excludeId !== null) {
+        $sql .= ' AND id <> :exclude_id';
+        $parameters[':exclude_id'] = $excludeId;
+    }
+
+    $statement = $connection->prepare($sql . ' LIMIT 1');
+    $statement->execute($parameters);
+
+    if ($statement->fetchColumn() !== false) {
+        throw new InvalidArgumentException('Ya existe una seccion con esa key dentro de la plantilla.');
+    }
+}
+
+function adminAssertSingleTemplateHero(
+    PDO $connection,
+    int $templateId,
+    string $sectionType,
+    ?int $excludeId = null
+): void {
+    if ($sectionType !== 'hero') {
+        return;
+    }
+
+    $sql = "SELECT id FROM collection_template_sections WHERE template_id = :template_id AND section_type = 'hero'";
+    $parameters = [':template_id' => $templateId];
+
+    if ($excludeId !== null) {
+        $sql .= ' AND id <> :exclude_id';
+        $parameters[':exclude_id'] = $excludeId;
+    }
+
+    $statement = $connection->prepare($sql . ' LIMIT 1');
+    $statement->execute($parameters);
+
+    if ($statement->fetchColumn() !== false) {
+        throw new InvalidArgumentException('La plantilla ya tiene una seccion hero.');
+    }
+}
+
+function adminNextTemplateSectionOrder(PDO $connection, int $templateId): int
+{
+    return adminNextDisplayOrder($connection, 'collection_template_sections', ['template_id' => $templateId]);
+}
+
+function adminBuildTemplateSectionData(PDO $connection, ?int $existingId = null): array
+{
+    $templateId = adminPostInt('template_id');
+    $sectionKey = adminRequireSectionKey(adminPostString('section_key'));
+    $sectionType = adminRequireSectionType(adminPostString('section_type'));
+
+    adminAssertTemplateExists($connection, $templateId);
+    adminAssertTemplateSectionKeyAvailable($connection, $templateId, $sectionKey, $existingId);
+    adminAssertSingleTemplateHero($connection, $templateId, $sectionType, $existingId);
+
+    $orderRaw = trim((string) ($_POST['display_order'] ?? ''));
+    $displayOrder = $orderRaw === ''
+        ? adminNextTemplateSectionOrder($connection, $templateId)
+        : max(0, (int) $orderRaw);
+
+    return [
+        'template_id' => $templateId,
+        'section_key' => $sectionKey,
+        'section_type' => $sectionType,
+        'eyebrow' => adminPostNullableString('eyebrow'),
+        'title' => adminPostNullableString('title'),
+        'body' => adminPostNullableString('body'),
+        'settings_json' => adminEncodeSectionVisualSettings(
+            $sectionType,
+            $_POST['visual_settings'][$sectionType] ?? null
+        ),
+        'display_order' => $displayOrder,
+        'is_active' => adminPostBool('is_active'),
+    ];
+}
+
+function adminMoveTemplateSection(PDO $connection, int $sectionId, int $direction): bool
+{
+    $statement = $connection->prepare('SELECT template_id FROM collection_template_sections WHERE id = :id');
+    $statement->execute([':id' => $sectionId]);
+    $templateId = $statement->fetchColumn();
+
+    if ($templateId === false) {
+        throw new InvalidArgumentException('La seccion de plantilla seleccionada no existe.');
+    }
+
+    $listStatement = $connection->prepare(
+        'SELECT id FROM collection_template_sections WHERE template_id = :template_id ORDER BY display_order ASC, id ASC'
+    );
+    $listStatement->execute([':template_id' => (int) $templateId]);
+    $ids = array_map('intval', $listStatement->fetchAll(PDO::FETCH_COLUMN));
+    $currentIndex = array_search($sectionId, $ids, true);
+
+    if ($currentIndex === false) {
+        throw new InvalidArgumentException('No se pudo localizar la seccion dentro de su plantilla.');
+    }
+
+    $targetIndex = $currentIndex + $direction;
+
+    if ($targetIndex < 0 || $targetIndex >= count($ids)) {
+        return false;
+    }
+
+    [$ids[$currentIndex], $ids[$targetIndex]] = [$ids[$targetIndex], $ids[$currentIndex]];
+    $update = $connection->prepare('UPDATE collection_template_sections SET display_order = :display_order WHERE id = :id');
+
+    foreach ($ids as $index => $id) {
+        $update->execute([
+            ':display_order' => $index + 1,
+            ':id' => $id,
+        ]);
+    }
+
+    return true;
+}
+
+function adminCopyTemplateSectionsToCollection(PDO $connection, int $templateId, int $collectionId): int
+{
+    adminAssertTemplateExists($connection, $templateId);
+    adminAssertCollectionExists($connection, $collectionId);
+
+    $statement = $connection->prepare(
+        'SELECT section_key, section_type, eyebrow, title, body, settings_json, display_order, is_active
+         FROM collection_template_sections
+         WHERE template_id = :template_id
+         ORDER BY display_order ASC, id ASC'
+    );
+    $statement->execute([':template_id' => $templateId]);
+    $sections = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($sections === []) {
+        throw new InvalidArgumentException('La plantilla seleccionada no contiene secciones.');
+    }
+
+    $count = 0;
+
+    foreach ($sections as $section) {
+        adminSaveRecord($connection, 'collection_sections', [
+            'collection_id' => $collectionId,
+            'section_key' => (string) $section['section_key'],
+            'section_type' => (string) $section['section_type'],
+            'eyebrow' => $section['eyebrow'],
+            'title' => $section['title'],
+            'body' => $section['body'],
+            'settings_json' => $section['settings_json'],
+            'display_order' => (int) $section['display_order'],
+            'is_active' => (int) $section['is_active'],
+        ]);
+        $count++;
+    }
+
+    return $count;
+}
+
+function adminGenerateAvailableTemplateSlug(PDO $connection, string $baseSlug): string
+{
+    $normalized = adminRequireSlug($baseSlug);
+
+    for ($attempt = 1; $attempt <= 100; $attempt++) {
+        $suffix = $attempt === 1 ? '' : '-' . $attempt;
+        $candidate = adminTrimSlugBase($normalized, $suffix, 60) . $suffix;
+        $statement = $connection->prepare('SELECT id FROM collection_templates WHERE slug = :slug LIMIT 1');
+        $statement->execute([':slug' => $candidate]);
+
+        if ($statement->fetchColumn() === false) {
+            return $candidate;
+        }
+    }
+
+    throw new RuntimeException('No se pudo generar un slug unico para la plantilla.');
+}
+
+function adminCreateTemplateFromCollection(PDO $connection, int $collectionId): array
+{
+    $collection = adminFetchRecordById($connection, 'collections', $collectionId);
+    $templateId = adminSaveRecord($connection, 'collection_templates', [
+        'name' => trim((string) $collection['name']) . ' Template',
+        'slug' => adminGenerateAvailableTemplateSlug($connection, (string) $collection['slug'] . '-template'),
+        'description' => $collection['short_description'] ?: $collection['description'],
+        'preview_image' => $collection['thumbnail_image'] ?: $collection['cover_image'],
+        'display_order' => adminNextDisplayOrder($connection, 'collection_templates'),
+        'is_active' => 0,
+    ]);
+
+    $statement = $connection->prepare(
+        'SELECT section_key, section_type, eyebrow, title, body, settings_json, display_order, is_active
+         FROM collection_sections
+         WHERE collection_id = :collection_id
+         ORDER BY display_order ASC, id ASC'
+    );
+    $statement->execute([':collection_id' => $collectionId]);
+    $count = 0;
+
+    foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $section) {
+        adminSaveRecord($connection, 'collection_template_sections', [
+            'template_id' => $templateId,
+            'section_key' => (string) $section['section_key'],
+            'section_type' => (string) $section['section_type'],
+            'eyebrow' => $section['eyebrow'],
+            'title' => $section['title'],
+            'body' => $section['body'],
+            'settings_json' => $section['settings_json'],
+            'display_order' => (int) $section['display_order'],
+            'is_active' => (int) $section['is_active'],
+        ]);
+        $count++;
+    }
+
+    return ['template_id' => $templateId, 'sections' => $count];
+}
+
+function adminDuplicateTemplate(PDO $connection, int $sourceTemplateId): array
+{
+    $template = adminFetchRecordById($connection, 'collection_templates', $sourceTemplateId);
+    $newTemplateId = adminSaveRecord($connection, 'collection_templates', [
+        'name' => adminBuildCopyLabel((string) $template['name']),
+        'slug' => adminGenerateUniqueScopedSlug(
+            $connection,
+            'collection_templates',
+            'slug',
+            (string) $template['slug'],
+            60
+        ),
+        'description' => $template['description'],
+        'preview_image' => $template['preview_image'],
+        'display_order' => adminNextDisplayOrder($connection, 'collection_templates'),
+        'is_active' => 0,
+    ]);
+
+    $statement = $connection->prepare(
+        'SELECT section_key, section_type, eyebrow, title, body, settings_json, display_order, is_active
+         FROM collection_template_sections
+         WHERE template_id = :template_id
+         ORDER BY display_order ASC, id ASC'
+    );
+    $statement->execute([':template_id' => $sourceTemplateId]);
+    $count = 0;
+
+    foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $section) {
+        adminSaveRecord($connection, 'collection_template_sections', [
+            'template_id' => $newTemplateId,
+            'section_key' => (string) $section['section_key'],
+            'section_type' => (string) $section['section_type'],
+            'eyebrow' => $section['eyebrow'],
+            'title' => $section['title'],
+            'body' => $section['body'],
+            'settings_json' => $section['settings_json'],
+            'display_order' => (int) $section['display_order'],
+            'is_active' => (int) $section['is_active'],
+        ]);
+        $count++;
+    }
+
+    return ['template_id' => $newTemplateId, 'sections' => $count];
 }
 
 function adminAssertCollectionExists(PDO $connection, int $collectionId): void
@@ -254,6 +934,32 @@ function adminAssertSectionKeyAvailable(
     }
 }
 
+function adminAssertSingleHero(
+    PDO $connection,
+    int $collectionId,
+    string $sectionType,
+    ?int $excludeId = null
+): void {
+    if ($sectionType !== 'hero') {
+        return;
+    }
+
+    $sql = "SELECT id FROM collection_sections WHERE collection_id = :collection_id AND section_type = 'hero'";
+    $parameters = [':collection_id' => $collectionId];
+
+    if ($excludeId !== null) {
+        $sql .= ' AND id <> :exclude_id';
+        $parameters[':exclude_id'] = $excludeId;
+    }
+
+    $statement = $connection->prepare($sql . ' LIMIT 1');
+    $statement->execute($parameters);
+
+    if ($statement->fetchColumn() !== false) {
+        throw new InvalidArgumentException('La coleccion ya tiene una seccion hero. Edita la existente o eliminala antes de crear otra.');
+    }
+}
+
 function adminNextSectionOrder(PDO $connection, int $collectionId): int
 {
     $statement = $connection->prepare(
@@ -272,6 +978,7 @@ function adminBuildSectionData(PDO $connection, ?int $existingId = null): array
 
     adminAssertCollectionExists($connection, $collectionId);
     adminAssertSectionKeyAvailable($connection, $collectionId, $sectionKey, $existingId);
+    adminAssertSingleHero($connection, $collectionId, $sectionType, $existingId);
 
     $orderRaw = trim((string) ($_POST['display_order'] ?? ''));
     $displayOrder = $orderRaw === ''
@@ -729,6 +1436,11 @@ function adminHandlePost(PDO $connection): never
                 adminDeleteRecord($connection, 'categories', adminPostInt('id'));
                 $message = 'Categoria eliminada.';
                 break;
+            case 'duplicate_category':
+                $categoryId = adminDuplicateRecord($connection, 'categories', adminPostInt('id'));
+                $message = 'Categoria duplicada como borrador.';
+                $redirectDetail = 'category-' . $categoryId;
+                break;
             case 'create_entity':
                 adminSaveRecord($connection, 'entities', adminBuildEntityData(), null);
                 $message = 'Entidad creada.';
@@ -741,9 +1453,29 @@ function adminHandlePost(PDO $connection): never
                 adminDeleteRecord($connection, 'entities', adminPostInt('id'));
                 $message = 'Entidad eliminada.';
                 break;
+            case 'duplicate_entity':
+                $entityId = adminDuplicateRecord($connection, 'entities', adminPostInt('id'));
+                $message = 'Entidad duplicada como borrador.';
+                $redirectDetail = 'entity-' . $entityId;
+                break;
             case 'create_collection':
-                adminSaveRecord($connection, 'collections', adminBuildCollectionData(), null);
-                $message = 'Coleccion creada.';
+                $collectionData = adminBuildCollectionData();
+                $templateId = adminPostNullableInt('template_id');
+
+                if ($templateId !== null) {
+                    adminAssertTemplateExists($connection, $templateId);
+                    $collectionData['template_id'] = $templateId;
+                }
+
+                $collectionId = adminSaveRecord($connection, 'collections', $collectionData, null);
+                $copiedSections = $templateId !== null
+                    ? adminCopyTemplateSectionsToCollection($connection, $templateId, $collectionId)
+                    : 0;
+                $message = $templateId !== null
+                    ? sprintf('Coleccion creada desde plantilla con %d secciones.', $copiedSections)
+                    : 'Coleccion creada vacia.';
+                $redirectView = 'colecciones';
+                $redirectDetail = 'collection-' . $collectionId;
                 break;
             case 'update_collection':
                 adminSaveRecord($connection, 'collections', adminBuildCollectionData(), adminPostInt('id'));
@@ -752,6 +1484,95 @@ function adminHandlePost(PDO $connection): never
             case 'delete_collection':
                 adminDeleteRecord($connection, 'collections', adminPostInt('id'));
                 $message = 'Coleccion eliminada.';
+                break;
+            case 'duplicate_collection':
+                $duplicateResult = adminDuplicateCollection($connection, adminPostInt('id'));
+                $collectionId = $duplicateResult['collection_id'];
+                $message = sprintf(
+                    'Coleccion duplicada como borrador con %d secciones, %d piezas y %d recursos multimedia.',
+                    $duplicateResult['sections'],
+                    $duplicateResult['pieces'],
+                    $duplicateResult['media']
+                );
+                $redirectDetail = 'collection-' . $collectionId;
+                break;
+            case 'save_collection_as_template':
+                $templateResult = adminCreateTemplateFromCollection($connection, adminPostInt('id'));
+                $message = sprintf(
+                    'Plantilla creada como borrador con %d secciones.',
+                    $templateResult['sections']
+                );
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateResult['template_id'];
+                break;
+            case 'create_template':
+                $templateId = adminSaveRecord($connection, 'collection_templates', adminBuildTemplateData(), null);
+                $message = 'Plantilla creada.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateId;
+                break;
+            case 'update_template':
+                $templateId = adminPostInt('id');
+                adminSaveRecord($connection, 'collection_templates', adminBuildTemplateData(), $templateId);
+                $message = 'Plantilla actualizada.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateId;
+                break;
+            case 'delete_template':
+                adminDeleteRecord($connection, 'collection_templates', adminPostInt('id'));
+                $message = 'Plantilla eliminada.';
+                $redirectView = 'plantillas';
+                break;
+            case 'duplicate_template':
+                $templateResult = adminDuplicateTemplate($connection, adminPostInt('id'));
+                $message = sprintf('Plantilla duplicada con %d secciones.', $templateResult['sections']);
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateResult['template_id'];
+                break;
+            case 'create_template_section':
+                $templateSectionId = adminSaveRecord(
+                    $connection,
+                    'collection_template_sections',
+                    adminBuildTemplateSectionData($connection),
+                    null
+                );
+                $message = 'Seccion de plantilla creada.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . adminPostInt('template_id');
+                break;
+            case 'update_template_section':
+                $templateSectionId = adminPostInt('id');
+                $templateSectionData = adminBuildTemplateSectionData($connection, $templateSectionId);
+                adminSaveRecord(
+                    $connection,
+                    'collection_template_sections',
+                    $templateSectionData,
+                    $templateSectionId
+                );
+                $message = 'Seccion de plantilla actualizada.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateSectionData['template_id'];
+                break;
+            case 'delete_template_section':
+                $templateId = adminPostInt('template_id');
+                adminDeleteRecord($connection, 'collection_template_sections', adminPostInt('id'));
+                $message = 'Seccion de plantilla eliminada.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateId;
+                break;
+            case 'move_template_section_up':
+                $templateId = adminPostInt('template_id');
+                $moved = adminMoveTemplateSection($connection, adminPostInt('id'), -1);
+                $message = $moved ? 'Seccion de plantilla movida hacia arriba.' : 'La seccion ya es la primera.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateId;
+                break;
+            case 'move_template_section_down':
+                $templateId = adminPostInt('template_id');
+                $moved = adminMoveTemplateSection($connection, adminPostInt('id'), 1);
+                $message = $moved ? 'Seccion de plantilla movida hacia abajo.' : 'La seccion ya es la ultima.';
+                $redirectView = 'plantillas';
+                $redirectDetail = 'template-' . $templateId;
                 break;
             case 'create_section':
                 $sectionId = adminSaveRecord($connection, 'collection_sections', adminBuildSectionData($connection), null);
@@ -852,6 +1673,11 @@ function adminHandlePost(PDO $connection): never
                 adminDeleteRecord($connection, 'pieces', adminPostInt('id'));
                 $message = 'Pieza eliminada.';
                 break;
+            case 'duplicate_piece':
+                $pieceId = adminDuplicateRecord($connection, 'pieces', adminPostInt('id'));
+                $message = 'Pieza duplicada como borrador.';
+                $redirectDetail = 'piece-' . $pieceId;
+                break;
             case 'create_media':
                 $mediaId = adminSaveRecord($connection, 'media', adminBuildMediaData($connection), null);
                 $message = 'Multimedia creada.';
@@ -870,6 +1696,12 @@ function adminHandlePost(PDO $connection): never
                 $message = 'Multimedia eliminada.';
                 $redirectView = 'multimedia';
                 break;
+            case 'duplicate_media':
+                $mediaId = adminDuplicateRecord($connection, 'media', adminPostInt('id'));
+                $message = 'Multimedia duplicada como borrador.';
+                $redirectView = 'multimedia';
+                $redirectDetail = 'media-' . $mediaId;
+                break;
             default:
                 throw new InvalidArgumentException('Accion no reconocida.');
         }
@@ -883,7 +1715,15 @@ function adminHandlePost(PDO $connection): never
 
         error_log($exception->getMessage());
 
-        if (str_contains($action, 'section')) {
+        if ($action === 'save_collection_as_template') {
+            $redirectView = 'colecciones';
+            $collectionId = adminPostInt('id');
+            $redirectDetail = $collectionId > 0 ? 'collection-' . $collectionId : null;
+        } elseif (str_contains($action, 'template')) {
+            $redirectView = 'plantillas';
+            $templateId = adminPostInt('template_id', adminPostInt('id'));
+            $redirectDetail = $templateId > 0 ? 'template-' . $templateId : null;
+        } elseif (str_contains($action, 'section')) {
             $redirectView = 'secciones';
             $sectionId = adminPostInt('section_id', adminPostInt('id'));
             $redirectDetail = $sectionId > 0 ? 'section-' . $sectionId : null;

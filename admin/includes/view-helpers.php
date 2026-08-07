@@ -128,6 +128,7 @@ function adminFormatDateLabel(?string $value): string
 function adminSectionTypeOptions(): array
 {
     return [
+        'hero' => 'Hero',
         'intro' => 'Introduccion',
         'pieces' => 'Piezas',
         'gallery' => 'Galeria',

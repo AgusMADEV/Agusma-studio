@@ -9,6 +9,82 @@ declare(strict_types=1);
 function adminSectionVisualSchema(): array
 {
     return [
+        'hero' => [
+            'label' => 'Hero',
+            'description' => 'Configura la cabecera principal, la imagen, la altura y los elementos informativos de la coleccion.',
+            'fields' => [
+                'layout' => [
+                    'label' => 'Composicion',
+                    'type' => 'select',
+                    'default' => 'split',
+                    'options' => [
+                        'split' => 'Texto e imagen',
+                        'full_bleed' => 'Imagen a sangre',
+                        'centered' => 'Contenido centrado',
+                        'minimal' => 'Minimal',
+                    ],
+                ],
+                'height' => [
+                    'label' => 'Altura',
+                    'type' => 'select',
+                    'default' => 'viewport',
+                    'options' => [
+                        'compact' => 'Compacta',
+                        'viewport' => 'Portada',
+                        'full' => 'Pantalla completa',
+                    ],
+                ],
+                'image_position' => [
+                    'label' => 'Posicion de imagen',
+                    'type' => 'select',
+                    'default' => 'right',
+                    'options' => [
+                        'right' => 'Derecha',
+                        'left' => 'Izquierda',
+                        'background' => 'Como fondo',
+                    ],
+                ],
+                'fit' => [
+                    'label' => 'Ajuste de imagen',
+                    'type' => 'select',
+                    'default' => 'cover',
+                    'options' => ['cover' => 'Cubrir', 'contain' => 'Contener'],
+                ],
+                'position' => [
+                    'label' => 'Encuadre',
+                    'type' => 'select',
+                    'default' => 'center',
+                    'options' => ['top' => 'Superior', 'center' => 'Centro', 'bottom' => 'Inferior'],
+                ],
+                'overlay' => [
+                    'label' => 'Superposicion',
+                    'type' => 'select',
+                    'default' => 'dark',
+                    'options' => ['none' => 'Sin overlay', 'light' => 'Claro', 'dark' => 'Oscuro'],
+                ],
+                'alignment' => [
+                    'label' => 'Alineacion del texto',
+                    'type' => 'select',
+                    'default' => 'left',
+                    'options' => ['left' => 'Izquierda', 'center' => 'Centrada', 'right' => 'Derecha'],
+                ],
+                'show_entity' => [
+                    'label' => 'Mostrar categoria y entidad',
+                    'type' => 'checkbox',
+                    'default' => true,
+                ],
+                'show_tags' => [
+                    'label' => 'Mostrar etiquetas',
+                    'type' => 'checkbox',
+                    'default' => true,
+                ],
+                'show_actions' => [
+                    'label' => 'Mostrar botones',
+                    'type' => 'checkbox',
+                    'default' => true,
+                ],
+            ],
+        ],
         'intro' => [
             'label' => 'Introduccion',
             'description' => 'Controla la alineacion, anchura y superficie del bloque conceptual.',
