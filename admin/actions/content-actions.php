@@ -1414,7 +1414,7 @@ function adminHandlePost(PDO $connection): never
     }
 
     if ($action === '') {
-        adminRedirect('Accion no reconocida.');
+        adminRedirect('Accion no reconocida.', 'crear-contenido', null, 'error');
     }
 
     $redirectView = 'crear-contenido';
@@ -1734,7 +1734,8 @@ function adminHandlePost(PDO $connection): never
         adminRedirect(
             $exception instanceof InvalidArgumentException ? $exception->getMessage() : 'No se pudo guardar el cambio.',
             $redirectView,
-            $redirectDetail
+            $redirectDetail,
+            'error'
         );
     }
 }

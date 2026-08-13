@@ -29,6 +29,9 @@ textarea {
 }
 
 .admin-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 22px;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -97,10 +100,39 @@ textarea {
 }
 
 .admin-flash {
+  --admin-flash-height: 120px;
   margin: 0 0 22px;
   padding: 14px 16px;
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.82);
+  color: var(--color-text);
+  transition: opacity 0.28s ease, transform 0.28s ease, max-height 0.28s ease, margin 0.28s ease, padding 0.28s ease;
+  opacity: 1;
+  transform: translateY(0);
+  max-height: var(--admin-flash-height);
+  overflow: hidden;
+}
+
+.admin-flash--success {
+  border-color: rgba(76, 108, 59, 0.28);
+  background: rgba(236, 245, 232, 0.96);
+  color: #27411d;
+}
+
+.admin-flash--error {
+  border-color: rgba(143, 45, 32, 0.26);
+  background: rgba(253, 237, 233, 0.98);
+  color: #6b2218;
+}
+
+.admin-flash.is-hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
 }
 
 .admin-grid {
@@ -342,7 +374,7 @@ textarea {
 }
 
 .admin-master-detail[data-detail-open="false"] {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 620px);
 }
 
 .admin-master-detail-main {

@@ -5,16 +5,52 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 2) . '/config/database.php';
 require_once __DIR__ . '/section-settings.php';
 
-function adminRedirect(string $message, string $view = 'crear-contenido', ?string $detailId = null): never
+function adminEnsureSessionStarted(): void
 {
-    $safeView = preg_match('/^[a-z0-9-]+$/', $view) === 1 ? $view : 'crear-contenido';
-    $query = ['message' => $message];
-
-    if ($detailId !== null && preg_match('/^[a-z0-9-]+$/', $detailId) === 1) {
-        $query['detail'] = $detailId;
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
     }
 
-    header('Location: ?' . http_build_query($query) . '#' . $safeView);
+    session_start();
+}
+
+function adminFlash(?array $payload = null): array
+{
+    adminEnsureSessionStarted();
+
+    if ($payload !== null) {
+        $_SESSION['admin_flash'] = $payload;
+
+        return $payload;
+    }
+
+    $flash = $_SESSION['admin_flash'] ?? [];
+    unset($_SESSION['admin_flash']);
+
+    return is_array($flash) ? $flash : [];
+}
+
+function adminRedirect(
+    string $message,
+    string $view = 'crear-contenido',
+    ?string $detailId = null,
+    string $type = 'success'
+): never
+{
+    $safeView = preg_match('/^[a-z0-9-]+$/', $view) === 1 ? $view : 'crear-contenido';
+    $safeDetailId = $detailId !== null && preg_match('/^[a-z0-9-]+$/', $detailId) === 1
+        ? $detailId
+        : null;
+    $safeType = $type === 'error' ? 'error' : 'success';
+
+    adminFlash([
+        'message' => $message,
+        'view' => $safeView,
+        'detail' => $safeDetailId,
+        'type' => $safeType,
+    ]);
+
+    header('Location: ./');
     exit;
 }
 

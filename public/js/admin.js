@@ -3,6 +3,7 @@ const navLinks = Array.from(document.querySelectorAll("[data-admin-nav]"));
 const collapseToggle = document.querySelector("[data-admin-collapse-toggle]");
 const collapseBody = document.querySelector("[data-admin-collapse-body]");
 const panelControls = Array.from(document.querySelectorAll(".admin-panel-toolbar"));
+const initialViewId = normalizeViewId(document.body.dataset.adminInitialView || "");
 
 function normalizeViewId(value) {
   return (value || "").replace(/^#/, "").trim();
@@ -374,7 +375,7 @@ function setDetailSelection(panel, requestedDetailId, allowEmptySelection = fals
   }
 
   if (detailColumn) {
-    detailColumn.hidden = nextDetailId === "";
+    detailColumn.hidden = false;
   }
 
   panel.dataset.selectedDetailId = nextDetailId;
@@ -533,11 +534,34 @@ function setActiveView(viewId) {
 }
 
 function syncViewFromHash() {
-  setActiveView(window.location.hash);
+  const hashViewId = normalizeViewId(window.location.hash);
+
+  setActiveView(hashViewId || initialViewId);
+}
+
+function initFlashMessage() {
+  const flash = document.querySelector("[data-admin-flash]");
+
+  if (!flash) {
+    return;
+  }
+
+  const flashType = flash.dataset.adminFlashType === "error" ? "error" : "success";
+  const hideDelay = flashType === "error" ? 7000 : 4500;
+
+  flash.style.setProperty("--admin-flash-height", `${flash.scrollHeight + 8}px`);
+
+  window.setTimeout(() => {
+    flash.classList.add("is-hidden");
+    window.setTimeout(() => {
+      flash.remove();
+    }, 320);
+  }, hideDelay);
 }
 
 function initAdmin() {
   syncViewFromHash();
+  initFlashMessage();
   bindCollapseToggle();
   bindPanelFilters();
   bindDetailSelectors();

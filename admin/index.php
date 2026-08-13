@@ -7,6 +7,7 @@ require_once __DIR__ . '/includes/view-helpers.php';
 require_once __DIR__ . '/includes/page-data.php';
 require_once __DIR__ . '/actions/handle-request.php';
 
+$flashState = adminFlash();
 $connection = databaseConnection();
 $dashboard = adminLoadDashboardData($connection);
 $categories = $dashboard['categories'];
@@ -18,8 +19,12 @@ $sections = $dashboard['sections'];
 $pieces = $dashboard['pieces'];
 $mediaItems = $dashboard['mediaItems'];
 $legacyFeaturedCount = $dashboard['legacyFeaturedCount'];
-$flashMessage = trim((string) ($_GET['message'] ?? ''));
-$requestedDetailId = trim((string) ($_GET['detail'] ?? ''));
+$flashMessage = trim((string) ($flashState['message'] ?? ''));
+$flashType = ($flashState['type'] ?? '') === 'error' ? 'error' : 'success';
+$requestedViewId = trim((string) ($flashState['view'] ?? ''));
+$requestedDetailId = trim((string) ($flashState['detail'] ?? ''));
+$requestedViewId = preg_match('/^[a-z0-9-]+$/', $requestedViewId) === 1 ? $requestedViewId : '';
+$requestedDetailId = preg_match('/^[a-z0-9-]+$/', $requestedDetailId) === 1 ? $requestedDetailId : '';
 $mediaBySection = [];
 $unassignedMediaByCollection = [];
 $templateSectionsByTemplate = [];
@@ -61,7 +66,7 @@ $totalMedia = count($mediaItems);
   <link rel="stylesheet" href="../public/css/variables.css" />
   <link rel="stylesheet" href="../public/css/admin.css" />
 </head>
-<body>
+<body data-admin-initial-view="<?= adminEscape($requestedViewId) ?>">
   <div class="admin-app">
     <aside class="admin-sidebar" aria-label="Vistas del panel">
       <div class="admin-brand">
@@ -112,7 +117,13 @@ $totalMedia = count($mediaItems);
 
       <main class="admin-shell">
         <?php if ($flashMessage !== ''): ?>
-          <p class="admin-flash"><?= adminEscape($flashMessage) ?></p>
+          <p
+            class="admin-flash admin-flash--<?= adminEscape($flashType) ?>"
+            data-admin-flash
+            data-admin-flash-type="<?= adminEscape($flashType) ?>"
+            role="<?= $flashType === 'error' ? 'alert' : 'status' ?>"
+            aria-live="<?= $flashType === 'error' ? 'assertive' : 'polite' ?>"
+          ><?= adminEscape($flashMessage) ?></p>
         <?php endif; ?>
 
         <div class="admin-views">
@@ -162,11 +173,6 @@ $totalMedia = count($mediaItems);
               <p>Imagenes, recursos y material asociado.</p>
             </article>
           </section>
-
-          <?php if ($flashMessage !== ''): ?>
-            <p class="admin-flash"><?= adminEscape($flashMessage) ?></p>
-          <?php endif; ?>
-
           <aside class="admin-note">
             <strong>Estado tecnico</strong>
             <p>Legacy: la tabla featured_collections sigue presente con <?= $legacyFeaturedCount ?> registros mientras termina la migracion del contenido.</p>
