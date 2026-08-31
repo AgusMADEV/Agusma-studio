@@ -8,8 +8,11 @@ $categorySlug = publicPageSlugParam('category');
 $entitySlug = publicPageSlugParam('entity');
 $collectionSlug = publicPageSlugParam('collection');
 $collectionTitle = publicPageTitleFromSlug($collectionSlug, 'Collection');
+$previewToken = trim((string) ($_GET['preview'] ?? ''));
+$isPreviewMode = preg_match('/^[a-f0-9]{64}$/', $previewToken) === 1;
 
-$pageTitle = $collectionTitle . ' | AgusMA Studio';
+$pageTitle = ($isPreviewMode ? 'Preview · ' : '') . $collectionTitle . ' | AgusMA Studio';
+$metaRobots = $isPreviewMode ? 'noindex,nofollow,noarchive' : 'index,follow';
 $metaDescription = 'Collection detail view for AgusMA Studio content architecture.';
 $canonicalPath = $categorySlug !== null && $entitySlug !== null && $collectionSlug !== null
     ? sprintf('./collection.php?category=%s&entity=%s&collection=%s', urlencode($categorySlug), urlencode($entitySlug), urlencode($collectionSlug))
@@ -40,7 +43,11 @@ require __DIR__ . '/includes/site-header.php';
     data-category-slug="<?= htmlspecialchars((string) ($categorySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
     data-entity-slug="<?= htmlspecialchars((string) ($entitySlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
     data-collection-slug="<?= htmlspecialchars((string) ($collectionSlug ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+    data-preview-token="<?= htmlspecialchars($isPreviewMode ? $previewToken : '', ENT_QUOTES, 'UTF-8') ?>"
   >
+    <?php if ($isPreviewMode): ?>
+      <div class="collection-preview-banner" role="status">PREVIEW · Esta colección todavía no está publicada</div>
+    <?php endif; ?>
     <section class="category-hero collection-hero" data-collection-fallback-hero>
       <div class="category-hero__content">
         <p class="category-hero__eyebrow" data-collection-eyebrow>Collection detail</p>

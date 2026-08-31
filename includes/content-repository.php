@@ -155,7 +155,7 @@ function contentFetchCollectionsByEntity(PDO $connection, string $categorySlug, 
         WHERE col.entity_id = :entity_id';
 
     if ($activeOnly) {
-        $sql .= ' AND col.is_active = 1';
+        $sql .= ' AND col.is_active = 1 AND col.published_at IS NOT NULL AND col.published_at <= NOW()';
     }
 
     $sql .= ' GROUP BY col.id
@@ -198,7 +198,7 @@ function contentFetchCollectionsByEntity(PDO $connection, string $categorySlug, 
     ];
 }
 
-function contentFetchCollectionRecord(PDO $connection, string $categorySlug, string $entitySlug, string $collectionSlug, bool $activeOnly = true): ?array
+function contentFetchCollectionRecord(PDO $connection, string $categorySlug, string $entitySlug, string $collectionSlug, bool $activeOnly = true, bool $publishedOnly = true): ?array
 {
     $sql = 'SELECT
             c.id AS category_id,
@@ -243,7 +243,8 @@ function contentFetchCollectionRecord(PDO $connection, string $categorySlug, str
             col.display_order,
             col.is_featured,
             col.is_active,
-            col.published_at
+            col.published_at,
+            col.preview_token
         FROM collections col
         INNER JOIN entities e ON e.id = col.entity_id
         INNER JOIN categories c ON c.id = e.category_id
@@ -253,6 +254,10 @@ function contentFetchCollectionRecord(PDO $connection, string $categorySlug, str
 
     if ($activeOnly) {
         $sql .= ' AND c.is_active = 1 AND e.is_active = 1 AND col.is_active = 1';
+    }
+
+    if ($publishedOnly) {
+        $sql .= ' AND col.published_at IS NOT NULL AND col.published_at <= NOW()';
     }
 
     $statement = $connection->prepare($sql);
@@ -366,9 +371,9 @@ function contentFetchCollectionSections(PDO $connection, int $collectionId, bool
     return $sections;
 }
 
-function contentFetchCollectionDetail(PDO $connection, string $categorySlug, string $entitySlug, string $collectionSlug, bool $activeOnly = true): ?array
+function contentFetchCollectionDetail(PDO $connection, string $categorySlug, string $entitySlug, string $collectionSlug, bool $activeOnly = true, bool $publishedOnly = true): ?array
 {
-    $collection = contentFetchCollectionRecord($connection, $categorySlug, $entitySlug, $collectionSlug, $activeOnly);
+    $collection = contentFetchCollectionRecord($connection, $categorySlug, $entitySlug, $collectionSlug, $activeOnly, $publishedOnly);
 
     if ($collection === null) {
         return null;
@@ -480,6 +485,8 @@ function contentFetchFeaturedCollections(PDO $connection): array
         INNER JOIN categories c ON c.id = e.category_id
         WHERE col.is_featured = 1
           AND col.is_active = 1
+          AND col.published_at IS NOT NULL
+          AND col.published_at <= NOW()
           AND e.is_active = 1
           AND c.is_active = 1
         ORDER BY col.display_order ASC, col.id ASC'

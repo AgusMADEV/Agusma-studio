@@ -1057,3 +1057,17 @@
     font-size: 14px;
   }
 }
+.collection-preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: #f4e7b4;
+  color: #171717;
+  border-bottom: 1px solid rgba(23, 23, 23, 0.18);
+}

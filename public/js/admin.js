@@ -400,6 +400,7 @@ function applyPanelFilters(panel) {
   items.forEach((item) => {
     const itemText = item.textContent.toLowerCase();
     const isActive = item.dataset.active === "1";
+    const isPublished = item.dataset.published === "1";
     const isFeatured = item.dataset.featured === "1";
     const matchesSearch = query === "" || itemText.includes(query);
     const matchesCollection =
@@ -407,6 +408,8 @@ function applyPanelFilters(panel) {
     const matchesStatus =
       statusValue === "all" ||
       (statusValue === "active" && isActive) ||
+      (statusValue === "published" && isActive && isPublished) ||
+      (statusValue === "draft" && isActive && !isPublished) ||
       (statusValue === "inactive" && !isActive) ||
       (statusValue === "featured" && isFeatured);
 

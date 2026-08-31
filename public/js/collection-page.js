@@ -6,6 +6,7 @@ if (root) {
   const categorySlug = root.dataset.categorySlug || "";
   const entitySlug = root.dataset.entitySlug || "";
   const collectionSlug = root.dataset.collectionSlug || "";
+  const previewToken = root.dataset.previewToken || "";
 
   const nameNode = root.querySelector("[data-collection-name]");
   const descriptionNode = root.querySelector("[data-collection-description]");
@@ -30,6 +31,7 @@ if (root) {
         category: categorySlug,
         entity: entitySlug,
         collection: collectionSlug,
+        preview: previewToken || null,
       });
 
       const category = payload.category || {};

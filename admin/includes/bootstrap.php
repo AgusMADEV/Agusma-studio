@@ -131,3 +131,38 @@ function adminFormatDateTimeInput(?string $value): string
 
     return str_replace(' ', 'T', substr($value, 0, 16));
 }
+function adminGeneratePreviewToken(): string
+{
+    return bin2hex(random_bytes(32));
+}
+
+function adminCollectionEditorialStatus(array $collection): string
+{
+    if ((int) ($collection['is_active'] ?? 0) !== 1) {
+        return 'Desactivada';
+    }
+
+    $publishedAt = trim((string) ($collection['published_at'] ?? ''));
+    if ($publishedAt === '') {
+        return 'Draft';
+    }
+
+    $timestamp = strtotime($publishedAt);
+    if ($timestamp !== false && $timestamp <= time()) {
+        return 'Published';
+    }
+
+    return 'Draft';
+}
+
+function adminCollectionPreviewUrl(array $collection): string
+{
+    $query = http_build_query([
+        'category' => (string) ($collection['category_slug'] ?? ''),
+        'entity' => (string) ($collection['entity_slug'] ?? ''),
+        'collection' => (string) ($collection['slug'] ?? ''),
+        'preview' => (string) ($collection['preview_token'] ?? ''),
+    ]);
+
+    return '../public/collection.php?' . $query;
+}

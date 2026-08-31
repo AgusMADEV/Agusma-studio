@@ -54,7 +54,7 @@ function adminLoadDashboardData(PDO $connection): array
         "SELECT col.id, col.entity_id, col.name, col.slug, col.subtitle, col.collection_year, col.season,
                 col.short_description, col.description, col.concept, col.cover_image, col.thumbnail_image,
                 col.primary_color, col.secondary_color, col.background_color, col.text_color, col.image_variant,
-                col.layout_style, col.template_id, col.display_order, col.is_featured, col.is_active, col.published_at,
+                col.layout_style, col.template_id, col.display_order, col.is_featured, col.is_active, col.published_at, col.preview_token,
                 col.created_at, col.updated_at,
                 e.name AS entity_name, e.slug AS entity_slug, e.entity_type, c.name AS category_name, c.slug AS category_slug,
                 t.name AS template_name

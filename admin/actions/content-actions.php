@@ -229,6 +229,7 @@ function adminBuildDuplicateData(PDO $connection, string $table, int $id): array
                 ['entity_id' => (int) $record['entity_id']]
             );
             $record['published_at'] = null;
+            $record['preview_token'] = adminGeneratePreviewToken();
             break;
         case 'pieces':
             $record['slug'] = adminGenerateUniqueScopedSlug(
@@ -1405,6 +1406,36 @@ function adminDeleteSectionMedia(PDO $connection, int $sectionId, int $mediaId):
     adminDeleteRecord($connection, 'media', $mediaId);
 }
 
+function adminPublishCollection(PDO $connection, int $collectionId): void
+{
+    adminAssertCollectionExists($connection, $collectionId);
+    $statement = $connection->prepare(
+        'UPDATE collections SET is_active = 1, published_at = NOW() WHERE id = :id'
+    );
+    $statement->execute([':id' => $collectionId]);
+}
+
+function adminUnpublishCollection(PDO $connection, int $collectionId): void
+{
+    adminAssertCollectionExists($connection, $collectionId);
+    $statement = $connection->prepare(
+        'UPDATE collections SET published_at = NULL WHERE id = :id'
+    );
+    $statement->execute([':id' => $collectionId]);
+}
+
+function adminRegenerateCollectionPreviewToken(PDO $connection, int $collectionId): void
+{
+    adminAssertCollectionExists($connection, $collectionId);
+    $statement = $connection->prepare(
+        'UPDATE collections SET preview_token = :preview_token WHERE id = :id'
+    );
+    $statement->execute([
+        ':preview_token' => adminGeneratePreviewToken(),
+        ':id' => $collectionId,
+    ]);
+}
+
 function adminHandlePost(PDO $connection): never
 {
     $action = adminPostString('submit_action');
@@ -1460,6 +1491,8 @@ function adminHandlePost(PDO $connection): never
                 break;
             case 'create_collection':
                 $collectionData = adminBuildCollectionData();
+                $collectionData['published_at'] = null;
+                $collectionData['preview_token'] = adminGeneratePreviewToken();
                 $templateId = adminPostNullableInt('template_id');
 
                 if ($templateId !== null) {
@@ -1478,8 +1511,33 @@ function adminHandlePost(PDO $connection): never
                 $redirectDetail = 'collection-' . $collectionId;
                 break;
             case 'update_collection':
-                adminSaveRecord($connection, 'collections', adminBuildCollectionData(), adminPostInt('id'));
+                $collectionId = adminPostInt('id');
+                $currentCollection = adminFetchRecordById($connection, 'collections', $collectionId);
+                $collectionData = adminBuildCollectionData();
+                $collectionData['published_at'] = $currentCollection['published_at'];
+                adminSaveRecord($connection, 'collections', $collectionData, $collectionId);
                 $message = 'Coleccion actualizada.';
+                break;
+            case 'publish_collection':
+                $collectionId = adminPostInt('id');
+                adminPublishCollection($connection, $collectionId);
+                $message = 'Coleccion publicada.';
+                $redirectView = 'colecciones';
+                $redirectDetail = 'collection-' . $collectionId;
+                break;
+            case 'unpublish_collection':
+                $collectionId = adminPostInt('id');
+                adminUnpublishCollection($connection, $collectionId);
+                $message = 'Coleccion devuelta a Draft.';
+                $redirectView = 'colecciones';
+                $redirectDetail = 'collection-' . $collectionId;
+                break;
+            case 'regenerate_collection_preview':
+                $collectionId = adminPostInt('id');
+                adminRegenerateCollectionPreviewToken($connection, $collectionId);
+                $message = 'Enlace de preview regenerado.';
+                $redirectView = 'colecciones';
+                $redirectDetail = 'collection-' . $collectionId;
                 break;
             case 'delete_collection':
                 adminDeleteRecord($connection, 'collections', adminPostInt('id'));

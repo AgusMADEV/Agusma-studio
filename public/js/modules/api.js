@@ -35,8 +35,8 @@ export async function fetchCollections({ category, entity }) {
   return fetchJson(`./api/collections.php${buildQuery({ category, entity })}`);
 }
 
-export async function fetchCollectionDetail({ category, entity, collection }) {
-  return fetchJson(`./api/collection-detail.php${buildQuery({ category, entity, collection })}`);
+export async function fetchCollectionDetail({ category, entity, collection, preview = null }) {
+  return fetchJson(`./api/collection-detail.php${buildQuery({ category, entity, collection, preview })}`);
 }
 
 export async function fetchPieces({ category, entity, collection }) {

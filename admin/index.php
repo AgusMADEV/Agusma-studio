@@ -278,7 +278,6 @@ $totalMedia = count($mediaItems);
                 <label>Text color<input type="text" name="text_color" /></label>
                 <label>Image variant<input type="text" name="image_variant" value="light" /></label>
                 <label>Layout style<input type="text" name="layout_style" value="standard" /></label>
-                <label>Published at<input type="datetime-local" name="published_at" /></label>
                 <label>Orden<input type="number" name="display_order" value="0" min="0" /></label>
                 <label class="admin-checkbox"><input type="checkbox" name="is_featured" /> Destacada</label>
                 <label class="admin-checkbox"><input type="checkbox" name="is_active" checked /> Activa</label>
@@ -793,8 +792,9 @@ $totalMedia = count($mediaItems);
                   <span>Estado</span>
                   <select data-admin-status-filter>
                     <option value="all">Todos</option>
-                    <option value="active">Activas</option>
-                    <option value="inactive">Inactivas</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="inactive">Desactivadas</option>
                     <option value="featured">Destacadas</option>
                   </select>
                 </label>
@@ -821,7 +821,9 @@ $totalMedia = count($mediaItems);
                 <?php foreach ($collections as $collection): ?>
                   <?php $collectionSummary = adminFirstNonEmpty([(string) $collection['short_description'], (string) $collection['subtitle'], (string) $collection['description']], 'Sin resumen disponible.'); ?>
                   <?php $collectionPreview = adminRecordPreviewImage($collection, ['thumbnail_image', 'cover_image']); ?>
-                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="collection-<?= (int) $collection['id'] ?>" data-active="<?= (int) $collection['is_active'] ?>" data-featured="<?= (int) $collection['is_featured'] ?>" data-order="<?= (int) $collection['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $collection['name'])) ?>" aria-controls="detail-collection-<?= (int) $collection['id'] ?>">
+                  <?php $collectionEditorialStatus = adminCollectionEditorialStatus($collection); ?>
+                  <?php $collectionIsPublished = $collectionEditorialStatus === 'Published'; ?>
+                  <button type="button" class="admin-item admin-item--table" data-admin-item data-admin-detail-trigger data-detail-id="collection-<?= (int) $collection['id'] ?>" data-active="<?= (int) $collection['is_active'] ?>" data-published="<?= $collectionIsPublished ? '1' : '0' ?>" data-featured="<?= (int) $collection['is_featured'] ?>" data-order="<?= (int) $collection['display_order'] ?>" data-name="<?= adminEscape(strtolower((string) $collection['name'])) ?>" aria-controls="detail-collection-<?= (int) $collection['id'] ?>">
                     <span class="admin-item-main">
                       <span class="admin-item-media<?= $collectionPreview === '' ? ' is-empty' : '' ?>">
                         <?php if ($collectionPreview !== ''): ?>
@@ -838,7 +840,7 @@ $totalMedia = count($mediaItems);
                     </span>
                     <span class="admin-item-cell"><?= adminEscape($collection['slug']) ?></span>
                     <span class="admin-item-cell"><?= !empty($collection['collection_year']) ? (int) $collection['collection_year'] : 'n/a' ?></span>
-                    <span class="admin-item-cell"><span class="admin-status-badge"><?= (int) $collection['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></span>
+                    <span class="admin-item-cell"><span class="admin-status-badge admin-status-badge--<?= strtolower($collectionEditorialStatus) ?>"><?= adminEscape($collectionEditorialStatus) ?></span></span>
                     <span class="admin-item-cell admin-item-cell--action"><span class="admin-item-link">Ver detalle</span><span class="admin-item-chevron" aria-hidden="true"></span></span>
                   </button>
                 <?php endforeach; ?>
@@ -852,6 +854,9 @@ $totalMedia = count($mediaItems);
               <?php foreach ($collections as $collection): ?>
                 <?php $collectionSummary = adminFirstNonEmpty([(string) $collection['short_description'], (string) $collection['subtitle'], (string) $collection['description']], 'Sin resumen disponible.'); ?>
                 <?php $collectionPreview = adminRecordPreviewImage($collection, ['cover_image', 'thumbnail_image']); ?>
+                <?php $collectionEditorialStatus = adminCollectionEditorialStatus($collection); ?>
+                <?php $collectionIsPublished = $collectionEditorialStatus === 'Published'; ?>
+                <?php $collectionPreviewUrl = adminCollectionPreviewUrl($collection); ?>
                 <form method="post" class="admin-detail-panel" data-admin-detail-panel data-detail-id="collection-<?= (int) $collection['id'] ?>" id="detail-collection-<?= (int) $collection['id'] ?>" hidden>
                   <input type="hidden" name="action" value="update_collection" />
                   <input type="hidden" name="id" value="<?= (int) $collection['id'] ?>" />
@@ -872,7 +877,7 @@ $totalMedia = count($mediaItems);
                       <p>Actualiza el contenido, la narrativa y los assets de esta coleccion.</p>
                     </div>
                     <div class="admin-edit-meta">
-                      <span class="admin-status-badge"><?= (int) $collection['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span>
+                      <span class="admin-status-badge admin-status-badge--<?= strtolower($collectionEditorialStatus) ?>"><?= adminEscape($collectionEditorialStatus) ?></span>
                       <span class="admin-edit-chip">Orden <?= (int) $collection['display_order'] ?></span>
                     </div>
                     <div class="admin-detail-copy">
@@ -884,14 +889,21 @@ $totalMedia = count($mediaItems);
                         <div><span>Ano</span><strong><?= !empty($collection['collection_year']) ? (int) $collection['collection_year'] : 'n/a' ?></strong></div>
                         <div><span>Resumen / descripcion</span><strong><?= adminEscape($collectionSummary) ?></strong></div>
                         <div><span>Fecha de actualizacion</span><strong><?= adminEscape(adminFormatDateLabel((string) $collection['updated_at'])) ?></strong></div>
+                        <div><span>Publicacion</span><strong><?= $collectionIsPublished ? adminEscape(adminFormatDateLabel((string) $collection['published_at'])) : 'Sin publicar' ?></strong></div>
                       </div>
                     </div>
                     <div class="admin-detail-actions-label">Acciones rapidas</div>
                     <div class="admin-detail-actions-quick">
                       <button type="button" class="admin-link admin-link--button" data-admin-edit-toggle>Editar</button>
+                      <a href="<?= adminEscape($collectionPreviewUrl) ?>" class="admin-link admin-link--ghost" target="_blank" rel="noopener">Preview</a>
+                      <?php if ($collectionIsPublished): ?>
+                        <button type="submit" name="submit_action" value="unpublish_collection" class="admin-link admin-link--ghost" formnovalidate>Volver a Draft</button>
+                      <?php else: ?>
+                        <button type="submit" name="submit_action" value="publish_collection" class="admin-link admin-link--button" formnovalidate>Publish</button>
+                      <?php endif; ?>
                       <button type="submit" name="submit_action" value="duplicate_collection" class="admin-link admin-link--ghost" formnovalidate>Duplicar</button>
                       <button type="submit" name="submit_action" value="save_collection_as_template" class="admin-link admin-link--ghost" formnovalidate>Guardar como plantilla</button>
-                      <button type="button" class="admin-link admin-link--ghost" disabled>Archivar</button>
+                      <button type="submit" name="submit_action" value="regenerate_collection_preview" class="admin-link admin-link--ghost" formnovalidate onclick="return confirm('El enlace de preview actual dejara de funcionar. Continuar?');">Regenerar preview</button>
                     </div>
                     <div class="admin-detail-editor" data-admin-editable hidden>
                       <div class="admin-detail-editor-row admin-detail-editor-row--split">
@@ -947,7 +959,7 @@ $totalMedia = count($mediaItems);
                         </label>
                       </div>
                       <div class="admin-detail-editor-row admin-detail-editor-row--split">
-                        <label class="admin-detail-field">Published at<input type="datetime-local" name="published_at" value="<?= adminEscape(adminFormatDateTimeInput($collection['published_at'])) ?>" /></label>
+                        <label class="admin-detail-field">Estado editorial<input type="text" value="<?= adminEscape($collectionEditorialStatus) ?>" readonly /></label>
                         <label class="admin-detail-field">Image variant<input type="text" name="image_variant" value="<?= adminEscape($collection['image_variant']) ?>" /></label>
                         <label class="admin-detail-field">Layout style<input type="text" name="layout_style" value="<?= adminEscape($collection['layout_style']) ?>" /></label>
                       </div>

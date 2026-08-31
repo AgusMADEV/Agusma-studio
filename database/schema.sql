@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS collections (
   is_featured TINYINT(1) NOT NULL DEFAULT 0,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   published_at DATETIME NULL,
+  preview_token CHAR(64) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -118,6 +119,7 @@ CREATE TABLE IF NOT EXISTS collections (
   KEY idx_collections_entity_id (entity_id),
   KEY idx_collections_featured (is_featured, is_active, display_order),
   KEY idx_collections_template_id (template_id),
+  UNIQUE KEY unique_collections_preview_token (preview_token),
   CONSTRAINT fk_collections_entity_id
     FOREIGN KEY (entity_id) REFERENCES entities (id)
     ON UPDATE CASCADE

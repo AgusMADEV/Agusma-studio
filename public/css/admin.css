@@ -2335,3 +2335,17 @@ body {
     justify-self: start;
   }
 }
+
+.admin-status-badge--published {
+  border-color: rgba(46, 125, 79, 0.32);
+  background: rgba(46, 125, 79, 0.1);
+}
+
+.admin-status-badge--draft {
+  border-color: rgba(173, 126, 29, 0.32);
+  background: rgba(173, 126, 29, 0.1);
+}
+
+.admin-status-badge--desactivada {
+  opacity: 0.65;
+}
