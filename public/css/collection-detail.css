@@ -337,6 +337,244 @@
   padding: 36px;
 }
 
+/* Piece showcase */
+.collection-section--piece-showcase {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: clamp(52px, 5vw, 82px);
+}
+
+.collection-section--piece-showcase.collection-section--surface-light,
+.collection-section--piece-showcase.collection-section--surface-dark,
+.collection-section--piece-showcase.collection-section--surface-primary,
+.collection-section--piece-showcase.collection-section--surface-secondary {
+  padding: 0;
+}
+
+.collection-piece-showcase__shell {
+  display: grid;
+  grid-template-columns: minmax(300px, 40fr) minmax(0, 60fr);
+  height: clamp(560px, 60vh, 580px);
+  min-height: 0;
+  border: 1px solid color-mix(in srgb, currentColor 9%, transparent);
+}
+
+.collection-piece-showcase--height-compact .collection-piece-showcase__shell {
+  height: clamp(480px, 52vh, 520px);
+}
+
+.collection-piece-showcase--height-editorial .collection-piece-showcase__shell {
+  height: clamp(560px, 60vh, 580px);
+}
+
+.collection-piece-showcase--height-viewport .collection-piece-showcase__shell {
+  height: clamp(660px, 72vh, 760px);
+}
+
+.collection-piece-showcase--height-full .collection-piece-showcase__shell {
+  height: calc(100vh - 130px);
+  min-height: 680px;
+}
+
+.collection-piece-showcase__copy {
+  position: relative;
+  z-index: 2;
+  padding: clamp(48px, 5vw, 84px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  transform: translateY(-6%);
+}
+
+.collection-piece-showcase__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 20px;
+  font-size: 10px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.collection-piece-showcase__number {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.collection-piece-showcase__number::after {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.collection-piece-showcase__label {
+  opacity: 0.72;
+}
+
+.collection-piece-showcase__title {
+  max-width: 9ch;
+  margin-top: 14px;
+  font-family: var(--font-serif);
+  font-size: clamp(44px, 4.9vw, 80px);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+.collection-piece-showcase__subtitle {
+  max-width: 34ch;
+  margin-top: 26px;
+  font-size: 12px;
+  line-height: 1.7;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+}
+
+.collection-piece-showcase__body {
+  max-width: 46ch;
+  margin-top: 16px;
+  color: color-mix(in srgb, currentColor 68%, transparent);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.collection-piece-showcase__visual {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--collection-primary) 18%, var(--collection-background));
+}
+
+.collection-piece-showcase__visual > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  object-fit: cover;
+  object-position: var(--piece-image-x, 50%) var(--piece-image-y, 50%);
+}
+
+.collection-piece-showcase--fit-contain .collection-piece-showcase__visual > img {
+  box-sizing: border-box;
+  object-fit: contain;
+  padding: clamp(28px, 5vw, 72px);
+}
+
+.collection-piece-showcase--image-left .collection-piece-showcase__visual { order: -1; }
+
+.collection-piece-showcase__secondary {
+  position: absolute;
+  right: clamp(18px, 3vw, 44px);
+  bottom: clamp(18px, 3vw, 44px);
+  width: min(32%, 250px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 45%, transparent);
+  background: var(--collection-background);
+  box-shadow: 0 18px 46px rgb(0 0 0 / 18%);
+}
+
+.collection-piece-showcase__secondary img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.collection-piece-showcase--layout-immersive .collection-piece-showcase__shell {
+  position: relative;
+  display: block;
+}
+
+.collection-piece-showcase--layout-immersive .collection-piece-showcase__visual {
+  position: absolute;
+  inset: 0;
+}
+
+.collection-piece-showcase--layout-immersive .collection-piece-showcase__visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(0 0 0 / 62%) 0%, rgb(0 0 0 / 24%) 46%, transparent 74%);
+  pointer-events: none;
+}
+
+.collection-piece-showcase--layout-immersive .collection-piece-showcase__copy {
+  min-height: inherit;
+  width: min(48%, 660px);
+  color: #fff;
+}
+
+.collection-piece-showcase--layout-immersive.collection-piece-showcase--image-left .collection-piece-showcase__visual::after {
+  background: linear-gradient(270deg, rgb(0 0 0 / 62%) 0%, rgb(0 0 0 / 24%) 46%, transparent 74%);
+}
+
+.collection-piece-showcase--layout-immersive.collection-piece-showcase--image-left .collection-piece-showcase__copy {
+  margin-left: auto;
+}
+
+.collection-piece-showcase--layout-immersive .collection-piece-showcase__body {
+  color: rgb(255 255 255 / 74%);
+}
+
+@media (max-width: 900px) {
+  .collection-piece-showcase__shell {
+    grid-template-columns: 1fr;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .collection-piece-showcase__copy {
+    min-height: 330px;
+    padding: 38px 28px;
+    transform: none;
+  }
+
+  .collection-piece-showcase__visual {
+    position: relative;
+    height: min(62vh, 560px);
+    min-height: 420px;
+    order: initial !important;
+  }
+
+  .collection-piece-showcase__title {
+    font-size: clamp(48px, 15vw, 76px);
+  }
+
+  .collection-piece-showcase--layout-immersive .collection-piece-showcase__shell {
+    min-height: 74vh !important;
+  }
+
+  .collection-piece-showcase--layout-immersive .collection-piece-showcase__visual {
+    min-height: 0;
+  }
+
+  .collection-piece-showcase--layout-immersive .collection-piece-showcase__copy {
+    width: 100%;
+    min-height: 74vh;
+    justify-content: flex-end;
+  }
+
+  .collection-piece-showcase--layout-immersive .collection-piece-showcase__visual::after,
+  .collection-piece-showcase--layout-immersive.collection-piece-showcase--image-left .collection-piece-showcase__visual::after {
+    background: linear-gradient(0deg, rgb(0 0 0 / 72%) 0%, rgb(0 0 0 / 12%) 68%, transparent 100%);
+  }
+}
+
 /* Gallery */
 .collection-gallery-grid--grid {
   display: grid;

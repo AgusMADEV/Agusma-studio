@@ -178,6 +178,107 @@ function adminSectionVisualSchema(): array
                 ],
             ],
         ],
+        'piece_showcase' => [
+            'label' => 'Pieza protagonista',
+            'description' => 'Presenta una pieza de la coleccion como momento editorial de gran formato.',
+            'fields' => [
+                'piece_slug' => [
+                    'label' => 'Slug de la pieza',
+                    'type' => 'text',
+                    'default' => '',
+                    'placeholder' => 'home-kit',
+                ],
+                'layout' => [
+                    'label' => 'Composicion',
+                    'type' => 'select',
+                    'default' => 'split',
+                    'options' => [
+                        'split' => 'Texto + imagen',
+                        'immersive' => 'Imagen inmersiva',
+                    ],
+                ],
+                'image_position' => [
+                    'label' => 'Posicion de imagen',
+                    'type' => 'select',
+                    'default' => 'right',
+                    'options' => ['right' => 'Derecha', 'left' => 'Izquierda'],
+                ],
+                'fit' => [
+                    'label' => 'Ajuste de imagen',
+                    'type' => 'select',
+                    'default' => 'cover',
+                    'options' => ['cover' => 'Cubrir', 'contain' => 'Contener'],
+                ],
+                'position_x' => [
+                    'label' => 'Encuadre horizontal',
+                    'type' => 'select',
+                    'default' => '50',
+                    'options' => [
+                        '0' => 'Extremo izquierdo',
+                        '25' => 'Izquierda',
+                        '50' => 'Centro',
+                        '75' => 'Derecha',
+                        '100' => 'Extremo derecho',
+                    ],
+                ],
+                'position_y' => [
+                    'label' => 'Encuadre vertical',
+                    'type' => 'select',
+                    'default' => '50',
+                    'options' => [
+                        '0' => 'Arriba',
+                        '25' => 'Superior',
+                        '50' => 'Centro',
+                        '75' => 'Inferior',
+                        '100' => 'Abajo',
+                    ],
+                ],
+                'height' => [
+                    'label' => 'Altura',
+                    'type' => 'select',
+                    'default' => 'editorial',
+                    'options' => [
+                        'compact' => 'Compacta',
+                        'editorial' => 'Editorial',
+                        'viewport' => 'Portada',
+                        'full' => 'Pantalla completa',
+                    ],
+                ],
+                'variant' => [
+                    'label' => 'Fondo',
+                    'type' => 'select',
+                    'default' => 'default',
+                    'options' => [
+                        'default' => 'Sin fondo',
+                        'light' => 'Claro',
+                        'dark' => 'Oscuro',
+                        'primary' => 'Color principal',
+                        'secondary' => 'Color secundario',
+                    ],
+                ],
+                'piece_number' => [
+                    'label' => 'Numero editorial',
+                    'type' => 'text',
+                    'default' => '',
+                    'placeholder' => '01',
+                ],
+                'show_piece_number' => [
+                    'label' => 'Mostrar numero editorial',
+                    'type' => 'checkbox',
+                    'default' => true,
+                ],
+                'show_piece_type' => [
+                    'label' => 'Mostrar tipo de pieza',
+                    'type' => 'checkbox',
+                    'default' => true,
+                ],
+                'show_secondary_image' => [
+                    'label' => 'Mostrar segunda imagen',
+                    'type' => 'checkbox',
+                    'default' => true,
+                ],
+            ],
+        ],
         'gallery' => [
             'label' => 'Galeria',
             'description' => 'Elige entre cuadricula, mosaico editorial, columnas masonry o carrusel horizontal.',
@@ -364,6 +465,12 @@ function adminSanitizeSectionVisualSettings(string $sectionType, mixed $input): 
     foreach ($schema['fields'] as $key => $field) {
         if ($field['type'] === 'checkbox') {
             $settings[$key] = isset($input[$key]) && in_array((string) $input[$key], ['1', 'true', 'on', 'yes'], true);
+            continue;
+        }
+
+        if ($field['type'] === 'text') {
+            $value = trim((string) ($input[$key] ?? $field['default']));
+            $settings[$key] = substr($value, 0, 160);
             continue;
         }
 

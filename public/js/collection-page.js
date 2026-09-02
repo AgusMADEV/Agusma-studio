@@ -162,6 +162,7 @@ if (root) {
       hero: createHeroSection,
       intro: createIntroSection,
       pieces: createPiecesSection,
+      piece_showcase: createPieceShowcaseSection,
       gallery: createGallerySection,
       technical_details: createTechnicalDetailsSection,
       full_image: createFullImageSection,
@@ -182,7 +183,7 @@ if (root) {
   }) {
     const settings = getSectionSettings(section);
     const layout = settingChoice(settings, "layout", ["split", "full_bleed", "centered", "minimal"], "split");
-    const height = settingChoice(settings, "height", ["compact", "viewport", "full"], "viewport");
+    const height = settingChoice(settings, "height", ["compact", "editorial", "viewport", "full"], "editorial");
     const imagePosition = settingChoice(settings, "image_position", ["right", "left", "background"], "right");
     const fit = settingChoice(settings, "fit", ["cover", "contain"], "cover");
     const position = settingChoice(settings, "position", ["top", "center", "bottom"], "center");
@@ -358,6 +359,139 @@ if (root) {
     grid.append(...pieces.map((piece) => createPieceCard(piece, { showDescription, showPieceType })));
     element.append(grid);
 
+    return element;
+  }
+
+  function createPieceShowcaseSection(section, { pieces }) {
+    const settings = getSectionSettings(section);
+    const pieceSlug = String(settings.piece_slug || "").trim();
+    const layout = settingChoice(settings, "layout", ["split", "immersive"], "split");
+    const imagePosition = settingChoice(settings, "image_position", ["right", "left"], "right");
+    const fit = settingChoice(settings, "fit", ["cover", "contain"], "cover");
+    const legacyPosition = settingChoice(settings, "position", ["top", "center", "bottom"], "center");
+    const legacyY = legacyPosition === "top" ? "0" : (legacyPosition === "bottom" ? "100" : "50");
+    const positionX = settingChoice(settings, "position_x", ["0", "25", "50", "75", "100"], "50");
+    const positionY = settingChoice(settings, "position_y", ["0", "25", "50", "75", "100"], legacyY);
+    const height = settingChoice(settings, "height", ["compact", "editorial", "viewport", "full"], "editorial");
+    const showPieceNumber = settingBoolean(settings, "show_piece_number", true);
+    const showPieceType = settingBoolean(settings, "show_piece_type", true);
+    const showSecondaryImage = settingBoolean(settings, "show_secondary_image", true);
+    const variant = surfaceVariant(settings, "default");
+    const element = createSectionElement(section, "piece-showcase");
+
+    applySurfaceVariant(element, variant);
+    element.classList.add(
+      `collection-piece-showcase--layout-${layout}`,
+      `collection-piece-showcase--image-${imagePosition}`,
+      `collection-piece-showcase--fit-${fit}`,
+      `collection-piece-showcase--height-${height}`,
+    );
+    element.style.setProperty("--piece-image-x", `${positionX}%`);
+    element.style.setProperty("--piece-image-y", `${positionY}%`);
+
+    const piece = pieceSlug
+      ? pieces.find((candidate) => String(candidate.slug || "") === pieceSlug)
+      : pieces[0];
+
+    if (!piece) {
+      element.append(createEmptyComponentMessage(
+        pieceSlug ? "No existe una pieza activa con slug = " : "No hay piezas activas. Configura el slug de la pieza en ",
+        pieceSlug || "piece_slug",
+      ));
+      return element;
+    }
+
+    const pieceMedia = Array.isArray(piece.media) ? piece.media : [];
+    const primaryUrl = piece.cover_image
+      || pieceMedia.find((item) => item.is_cover)?.file_url
+      || pieceMedia[0]?.file_url
+      || null;
+    const secondaryMedia = pieceMedia.find((item) => {
+      const url = item.thumbnail_url || item.file_url;
+      return url && url !== primaryUrl;
+    });
+
+    const shell = document.createElement("div");
+    shell.className = "collection-piece-showcase__shell";
+
+    const copy = document.createElement("div");
+    copy.className = "collection-piece-showcase__copy";
+
+    const rawEyebrow = String(section.eyebrow || "").trim();
+    const numberedEyebrow = rawEyebrow.match(/^\s*(\d{1,3})\s*[—–-]\s*(.+?)\s*$/);
+    const pieceIndex = Math.max(0, pieces.indexOf(piece));
+    const configuredNumber = String(settings.piece_number || "").trim();
+    const editorialNumber = configuredNumber
+      || (numberedEyebrow ? numberedEyebrow[1].padStart(2, "0") : String(pieceIndex + 1).padStart(2, "0"));
+    const editorialLabel = numberedEyebrow
+      ? numberedEyebrow[2]
+      : (rawEyebrow || formatPieceType(piece.piece_type || "piece"));
+
+    if (showPieceNumber || showPieceType || rawEyebrow) {
+      const meta = document.createElement("div");
+      meta.className = "collection-piece-showcase__meta";
+
+      if (showPieceNumber) {
+        const number = document.createElement("span");
+        number.className = "collection-piece-showcase__number";
+        number.textContent = editorialNumber;
+        meta.append(number);
+      }
+
+      if (showPieceType || rawEyebrow) {
+        const eyebrow = document.createElement("span");
+        eyebrow.className = "collection-piece-showcase__label";
+        eyebrow.textContent = editorialLabel;
+        meta.append(eyebrow);
+      }
+
+      copy.append(meta);
+    }
+
+    const title = document.createElement("h2");
+    title.className = "collection-piece-showcase__title";
+    title.textContent = section.title || piece.name || "Collection piece";
+    copy.append(title);
+
+    const subtitleText = piece.subtitle || piece.short_description || "";
+    if (subtitleText) {
+      const subtitle = document.createElement("p");
+      subtitle.className = "collection-piece-showcase__subtitle";
+      subtitle.textContent = subtitleText;
+      copy.append(subtitle);
+    }
+
+    const bodyText = typeof section.body === "string" && section.body.trim() !== ""
+      ? section.body
+      : (piece.description || piece.short_description || "");
+    copy.append(...createBodyParagraphs(bodyText, "collection-piece-showcase__body"));
+
+    const visual = document.createElement("div");
+    visual.className = "collection-piece-showcase__visual";
+
+    if (primaryUrl) {
+      const image = document.createElement("img");
+      image.src = primaryUrl;
+      image.alt = piece.name || "Collection piece";
+      image.loading = "lazy";
+      visual.append(image);
+    } else {
+      visual.append(createStatus("Esta pieza todavía no tiene imagen principal."));
+    }
+
+    if (showSecondaryImage && secondaryMedia) {
+      const inset = document.createElement("figure");
+      inset.className = "collection-piece-showcase__secondary";
+      const secondaryImage = document.createElement("img");
+      secondaryImage.src = secondaryMedia.thumbnail_url || secondaryMedia.file_url;
+      secondaryImage.alt = secondaryMedia.alt_text || secondaryMedia.title || `${piece.name || "Piece"} detail`;
+      secondaryImage.loading = "lazy";
+      inset.append(secondaryImage);
+      visual.append(inset);
+    }
+
+    shell.append(copy, visual);
+    element.append(shell);
     return element;
   }
 

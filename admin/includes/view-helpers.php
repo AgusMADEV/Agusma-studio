@@ -131,6 +131,7 @@ function adminSectionTypeOptions(): array
         'hero' => 'Hero',
         'intro' => 'Introduccion',
         'pieces' => 'Piezas',
+        'piece_showcase' => 'Pieza protagonista',
         'gallery' => 'Galeria',
         'technical_details' => 'Detalles tecnicos',
         'full_image' => 'Imagen completa',
@@ -200,6 +201,16 @@ function adminRenderSectionVisualSettings(string $activeType, ?string $settingsJ
                     <?= !empty($values[$key]) ? 'checked' : '' ?>
                   />
                   <span><?= adminEscape((string) $field['label']) ?></span>
+                </label>
+              <?php elseif ($field['type'] === 'text'): ?>
+                <label class="admin-visual-field">
+                  <span><?= adminEscape((string) $field['label']) ?></span>
+                  <input
+                    type="text"
+                    name="visual_settings[<?= adminEscape($sectionType) ?>][<?= adminEscape($key) ?>]"
+                    value="<?= adminEscape((string) ($values[$key] ?? '')) ?>"
+                    placeholder="<?= adminEscape((string) ($field['placeholder'] ?? '')) ?>"
+                  />
                 </label>
               <?php else: ?>
                 <label class="admin-visual-field">
