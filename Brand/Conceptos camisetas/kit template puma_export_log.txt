@@ -1,0 +1,89 @@
+Krita Multi Vector SVG Exporter — V2.4.2
+Timestamp: 2026-09-04T12:09:53
+SVG output: D:/xampp/htdocs/Agusma-studio/Brand/Conceptos camisetas/kit template puma.svg
+
+SVG exported successfully.
+
+Mode: All exportable layers
+Include hidden layers: No
+Structure mode: Universal / Illustrator
+Non-vector layers: Embedded as PNG
+Raster conversion engine: Auto
+Blend modes: Translate to SVG/CSS
+Vector masks/styles: Vector Priority
+Inherit Alpha: SVG alpha masks
+
+Layers scanned: 26
+Vector layers: 12
+Vector-containing groups: 5
+Exported raster layers: 3
+  - embedded raster layers: 3
+  - linked raster layers: 0
+Raster conversion methods:
+  - direct U8: 3
+  - Krita native: 0
+  - native fallbacks from Auto: 0
+Blend modes:
+  - translated: 1
+  - approximate mappings: 0
+  - unsupported: 0
+Inherit Alpha:
+  - flagged layers: 1
+  - SVG alpha masks created: 1
+  - warnings: 0
+Effect handling:
+  - rasterized affected vector/group nodes: 0
+  - vector-priority fidelity warnings: 0
+Ignored non-vector nodes: 0
+Skipped hidden nodes: 5
+Skipped unselected nodes: 0
+Skipped unsupported raster/helper nodes: 0
+Skipped empty-bounds raster nodes: 1
+Elapsed time: 0.552 s
+
+Ordinary vector geometry remained vector; Visual Priority may rasterize only affected vector/group nodes.
+
+Slowest layers / nodes (self time):
+- 0.188s self — bitmap.svg (vectorlayer, exported-vector) [nested]
+- 0.101s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.099s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.039s self — base (paintlayer, exported-raster) [nested]
+- 0.004s self — Vector Layer 5 (vectorlayer, exported-vector) [nested]
+
+Warnings:
+Skipped raster node 'secundario' because its bounds are empty.
+
+NODE TIMINGS (sorted by self time; TOTAL includes child nodes)
+------------------------------------------------------------------------------------------------
+   SELF |   TOTAL | OUTCOME                  | TYPE                   | NODE
+------------------------------------------------------------------------------------------------
+  0.188s |   0.188s | exported-vector          | vectorlayer            |   bitmap.svg
+  0.101s |   0.101s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.099s |   0.099s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.039s |   0.039s | exported-raster          | paintlayer             |     base
+  0.004s |   0.004s | exported-vector          | vectorlayer            |   Vector Layer 5
+  0.004s |   0.004s | exported-vector          | vectorlayer            |     ultraweave-thermoadapt.svg
+  0.003s |   0.391s | exported-group           | grouplayer             | fondo
+  0.002s |   0.002s | exported-vector          | vectorlayer            |     puma-licence.svg
+  0.002s |   0.002s | exported-vector          | vectorlayer            |   Vector Layer 3
+  0.002s |   0.010s | exported-group           | grouplayer             | fondo medida
+  0.002s |   0.002s | exported-vector          | vectorlayer            |   logo
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     Vector Layer 1
+  0.001s |   0.045s | exported-group           | grouplayer             |   jersey base
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     base
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     detalles
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     sponsor pecho
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     puma-only.svg
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     cuello
+  0.001s |   0.056s | exported-group           | grouplayer             | jersey
+  0.001s |   0.010s | exported-group           | grouplayer             |   logos
+  0.001s |   0.001s | skipped-raster           | paintlayer             |     secundario
+  0.001s |   0.001s | skipped-hidden           | vectorlayer            |     escudo
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
+  0.001s |   0.001s | skipped-hidden           | grouplayer             | logos-fuera
+  0.001s |   0.001s | skipped-hidden           | vectorlayer            |     shadow-vector
+
+WARNINGS
+------------------------------------------------------------------------
+- Skipped raster node 'secundario' because its bounds are empty.
