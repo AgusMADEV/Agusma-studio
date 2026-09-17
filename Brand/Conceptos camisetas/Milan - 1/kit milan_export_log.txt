@@ -1,6 +1,6 @@
 Krita Multi Vector SVG Exporter — V2.4.4
-Timestamp: 2026-09-08T18:53:54
-SVG output: C:/xampp/htdocs/GitHub/Agusma-studio/Brand/Conceptos camisetas/Milan - 1/kit milan.svg
+Timestamp: 2026-09-09T01:10:20
+SVG output: D:/xampp/htdocs/Agusma-studio/Brand/Conceptos camisetas/Milan - 1/kit milan.svg
 
 SVG exported successfully.
 
@@ -13,7 +13,7 @@ Blend modes: Translate to SVG/CSS
 Vector masks/styles: Vector Priority
 Inherit Alpha: SVG alpha masks
 
-Layers scanned: 27
+Layers scanned: 26
 Vector layers: 12
 Vector-containing groups: 5
 Exported raster layers: 4
@@ -39,56 +39,53 @@ Skipped hidden nodes: 4
 Skipped unselected nodes: 0
 Skipped unsupported raster/helper nodes: 0
 Skipped empty-bounds raster nodes: 1
-Skipped empty vector layers: 1
+Skipped empty vector layers: 0
 Skipped invalid vector layers: 0
-Elapsed time: 0.318 s
+Elapsed time: 0.252 s
 
 Ordinary vector geometry remained vector; Visual Priority may rasterize only affected vector/group nodes.
 
 Slowest layers / nodes (self time):
-- 0.065s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
-- 0.055s self — bitmap.svg (vectorlayer, exported-vector) [nested]
-- 0.044s self — base (paintlayer, exported-raster) [nested]
-- 0.040s self — rojo (paintlayer, exported-raster) [nested]
-- 0.019s self — white (paintlayer, exported-raster) [nested]
+- 0.050s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.046s self — bitmap.svg (vectorlayer, exported-vector) [nested]
+- 0.040s self — base (paintlayer, exported-raster) [nested]
+- 0.037s self — rojo (paintlayer, exported-raster) [nested]
+- 0.016s self — white (paintlayer, exported-raster) [nested]
 
 Warnings:
-Skipped vector layer 'Capa vectorial 5' because Krita returned an empty SVG.
 Skipped raster node 'secundario' because its bounds are empty.
 
 NODE TIMINGS (sorted by self time; TOTAL includes child nodes)
 ------------------------------------------------------------------------------------------------
    SELF |   TOTAL | OUTCOME                  | TYPE                   | NODE
 ------------------------------------------------------------------------------------------------
-  0.065s |   0.065s | exported-raster          | paintlayer             |   Paint Layer 2
-  0.055s |   0.055s | exported-vector          | vectorlayer            |   bitmap.svg
-  0.044s |   0.044s | exported-raster          | paintlayer             |     base
-  0.040s |   0.040s | exported-raster          | paintlayer             |     rojo
-  0.019s |   0.019s | exported-raster          | paintlayer             |       white
-  0.009s |   0.129s | exported-group           | grouplayer             | fondo
-  0.007s |   0.007s | exported-vector          | vectorlayer            |     ultraweave-thermoadapt-white.svg
-  0.005s |   0.005s | exported-vector          | vectorlayer            |     puma-licence.svg
-  0.004s |   0.004s | exported-vector          | vectorlayer            |     sponsor pecho
-  0.004s |   0.125s | exported-group           | grouplayer             |   jersey base
-  0.003s |   0.029s | exported-group           | grouplayer             |     Group 3
-  0.003s |   0.003s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
-  0.003s |   0.003s | exported-vector          | vectorlayer            |       Vector Layer 4
-  0.003s |   0.003s | exported-vector          | vectorlayer            |     base
-  0.002s |   0.002s | exported-vector          | vectorlayer            |       puma-only.svg
-  0.002s |   0.002s | exported-vector          | vectorlayer            |     detalles
-  0.002s |   0.149s | exported-group           | grouplayer             | jersey
+  0.050s |   0.050s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.046s |   0.046s | exported-vector          | vectorlayer            |   bitmap.svg
+  0.040s |   0.040s | exported-raster          | paintlayer             |     base
+  0.037s |   0.037s | exported-raster          | paintlayer             |     rojo
+  0.016s |   0.016s | exported-raster          | paintlayer             |       white
+  0.004s |   0.004s | exported-vector          | vectorlayer            |     ultraweave-thermoadapt-white.svg
+  0.003s |   0.098s | exported-group           | grouplayer             | fondo
+  0.002s |   0.002s | exported-vector          | vectorlayer            |     puma-licence.svg
   0.002s |   0.002s | exported-vector          | vectorlayer            |     ac-milan-logo-footylogos.svg
-  0.002s |   0.002s | exported-vector          | vectorlayer            |     puma-only.svg
-  0.002s |   0.002s | skipped-empty-vector     | vectorlayer            |       Capa vectorial 5
+  0.002s |   0.002s | exported-vector          | vectorlayer            |       puma-only.svg
   0.002s |   0.002s | exported-vector          | vectorlayer            |     Vector Layer 1
-  0.002s |   0.002s | skipped-hidden           | grouplayer             | logos-fuera
-  0.002s |   0.022s | exported-group           | grouplayer             |   logos
-  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
-  0.001s |   0.001s | skipped-raster           | paintlayer             |     secundario
+  0.002s |   0.022s | exported-group           | grouplayer             |     Group 3
+  0.002s |   0.107s | exported-group           | grouplayer             |   jersey base
+  0.002s |   0.002s | exported-vector          | vectorlayer            |     detalles
+  0.001s |   0.001s | exported-vector          | vectorlayer            |       Vector Layer 4
   0.001s |   0.001s | exported-vector          | vectorlayer            |     cuello
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     base
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     sponsor pecho
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     puma-only.svg
+  0.001s |   0.121s | exported-group           | grouplayer             | jersey
+  0.001s |   0.001s | skipped-raster           | paintlayer             |     secundario
+  0.001s |   0.013s | exported-group           | grouplayer             |   logos
   0.001s |   0.001s | skipped-hidden           | vectorlayer            |     shadow-vector
+  0.001s |   0.001s | skipped-hidden           | grouplayer             | logos-fuera
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
 
 WARNINGS
 ------------------------------------------------------------------------
-- Skipped vector layer 'Capa vectorial 5' because Krita returned an empty SVG.
 - Skipped raster node 'secundario' because its bounds are empty.

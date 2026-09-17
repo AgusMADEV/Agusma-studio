@@ -1,0 +1,94 @@
+Krita Multi Vector SVG Exporter — V2.4.4
+Timestamp: 2026-09-17T12:25:16
+SVG output: D:/xampp/htdocs/Agusma-studio/Brand/Conceptos camisetas/kit template nike.svg
+
+SVG exported successfully.
+
+Mode: All exportable layers
+Include hidden layers: No
+Structure mode: Universal / Illustrator
+Non-vector layers: Embedded as PNG
+Raster conversion engine: Auto
+Blend modes: Translate to SVG/CSS
+Vector masks/styles: Vector Priority
+Inherit Alpha: SVG alpha masks
+
+Layers scanned: 27
+Vector layers: 12
+Vector-containing groups: 5
+Exported raster layers: 3
+  - embedded raster layers: 3
+  - linked raster layers: 0
+Raster conversion methods:
+  - direct U8: 3
+  - Krita native: 0
+  - native fallbacks from Auto: 0
+Blend modes:
+  - translated: 1
+  - approximate mappings: 0
+  - unsupported: 0
+Inherit Alpha:
+  - flagged layers: 0
+  - SVG alpha masks created: 0
+  - warnings: 0
+Effect handling:
+  - rasterized affected vector/group nodes: 0
+  - vector-priority fidelity warnings: 0
+Ignored non-vector nodes: 0
+Skipped hidden nodes: 5
+Skipped unselected nodes: 0
+Skipped unsupported raster/helper nodes: 0
+Skipped empty-bounds raster nodes: 1
+Skipped empty vector layers: 1
+Skipped invalid vector layers: 0
+Elapsed time: 0.530 s
+
+Ordinary vector geometry remained vector; Visual Priority may rasterize only affected vector/group nodes.
+
+Slowest layers / nodes (self time):
+- 0.180s self — bitmap.svg (vectorlayer, exported-vector) [nested]
+- 0.102s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.101s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.038s self — base (paintlayer, exported-raster) [nested]
+- 0.004s self — Vector Layer 5 (vectorlayer, exported-vector) [nested]
+
+Warnings:
+Skipped vector layer 'Parches' because Krita returned an empty SVG.
+Skipped raster node 'secundario' because its bounds are empty.
+
+NODE TIMINGS (sorted by self time; TOTAL includes child nodes)
+------------------------------------------------------------------------------------------------
+   SELF |   TOTAL | OUTCOME                  | TYPE                   | NODE
+------------------------------------------------------------------------------------------------
+  0.180s |   0.180s | exported-vector          | vectorlayer            |   bitmap.svg
+  0.102s |   0.102s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.101s |   0.101s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.038s |   0.038s | exported-raster          | paintlayer             |     base
+  0.004s |   0.004s | exported-vector          | vectorlayer            |   Vector Layer 5
+  0.003s |   0.386s | exported-group           | grouplayer             | fondo
+  0.002s |   0.010s | exported-group           | grouplayer             | fondo medida
+  0.002s |   0.002s | exported-vector          | vectorlayer            |   logo
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     nike-engineered.svg
+  0.001s |   0.001s | exported-vector          | vectorlayer            |   signature-ivory.svg
+  0.001s |   0.001s | skipped-empty-vector     | vectorlayer            |     Parches
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     base
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     detalles
+  0.001s |   0.044s | exported-group           | grouplayer             |   jersey base
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     sponsor pecho
+  0.001s |   0.049s | exported-group           | grouplayer             | jersey
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     cuello
+  0.001s |   0.001s | exported-vector          | vectorlayer            |   Vector Layer 3
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     nike-borde.svg
+  0.001s |   0.005s | exported-group           | grouplayer             |   logos
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     Vector Layer 6
+  0.001s |   0.001s | skipped-raster           | paintlayer             |     secundario
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 6 (pasted)
+  0.001s |   0.001s | skipped-hidden           | vectorlayer            |     shadow-vector
+  0.000s |   0.000s | skipped-hidden           | vectorlayer            |     escudo
+  0.000s |   0.000s | skipped-hidden           | grouplayer             | logos-fuera
+
+WARNINGS
+------------------------------------------------------------------------
+- Skipped vector layer 'Parches' because Krita returned an empty SVG.
+- Skipped raster node 'secundario' because its bounds are empty.
