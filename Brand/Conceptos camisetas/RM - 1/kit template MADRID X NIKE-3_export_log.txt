@@ -1,5 +1,5 @@
 Krita Multi Vector SVG Exporter — V2.4.4
-Timestamp: 2026-09-24T00:45:28
+Timestamp: 2026-09-28T09:19:35
 SVG output: D:/xampp/htdocs/Agusma-studio/Brand/Conceptos camisetas/RM - 1/kit template MADRID X NIKE-3.svg
 
 SVG exported successfully.
@@ -41,51 +41,51 @@ Skipped unsupported raster/helper nodes: 0
 Skipped empty-bounds raster nodes: 0
 Skipped empty vector layers: 0
 Skipped invalid vector layers: 0
-Elapsed time: 0.560 s
+Elapsed time: 0.594 s
 
 Ordinary vector geometry remained vector; Visual Priority may rasterize only affected vector/group nodes.
 
 Slowest layers / nodes (self time):
-- 0.190s self — bitmap.svg (vectorlayer, exported-vector) [nested]
-- 0.101s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
-- 0.100s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
-- 0.040s self — base (paintlayer, exported-raster) [nested]
+- 0.205s self — bitmap.svg (vectorlayer, exported-vector) [nested]
+- 0.106s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.105s self — Paint Layer 2 (paintlayer, exported-raster) [nested]
+- 0.041s self — base (paintlayer, exported-raster) [nested]
 - 0.005s self — real-madrid-logo.svg (vectorlayer, exported-vector) [nested]
 
 NODE TIMINGS (sorted by self time; TOTAL includes child nodes)
 ------------------------------------------------------------------------------------------------
    SELF |   TOTAL | OUTCOME                  | TYPE                   | NODE
 ------------------------------------------------------------------------------------------------
-  0.190s |   0.190s | exported-vector          | vectorlayer            |   bitmap.svg
-  0.101s |   0.101s | exported-raster          | paintlayer             |   Paint Layer 2
-  0.100s |   0.100s | exported-raster          | paintlayer             |   Paint Layer 2
-  0.040s |   0.040s | exported-raster          | paintlayer             |     base
+  0.205s |   0.205s | exported-vector          | vectorlayer            |   bitmap.svg
+  0.106s |   0.106s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.105s |   0.105s | exported-raster          | paintlayer             |   Paint Layer 2
+  0.041s |   0.041s | exported-raster          | paintlayer             |     base
   0.005s |   0.005s | exported-vector          | vectorlayer            |     real-madrid-logo.svg
   0.004s |   0.004s | exported-vector          | vectorlayer            |   Vector Layer 5
-  0.003s |   0.394s | exported-group           | grouplayer             | fondo
+  0.004s |   0.419s | exported-group           | grouplayer             | fondo
+  0.003s |   0.003s | exported-vector          | vectorlayer            |     Vector Layer 10
   0.003s |   0.010s | exported-group           | grouplayer             | fondo medida
-  0.002s |   0.002s | exported-vector          | vectorlayer            |     Vector Layer 10
-  0.002s |   0.002s | skipped-hidden           | vectorlayer            |     real-madrid-monolilapalido.svg
   0.002s |   0.002s | skipped-hidden           | vectorlayer            |     emirates-lila-palido.svg
-  0.002s |   0.051s | exported-group           | grouplayer             |   jersey base
-  0.002s |   0.002s | exported-vector          | vectorlayer            |   logo
+  0.002s |   0.002s | skipped-hidden           | vectorlayer            |     real-madrid-monolilapalido.svg
+  0.002s |   0.053s | exported-group           | grouplayer             |   jersey base
   0.001s |   0.001s | exported-vector          | vectorlayer            |     nike-engineered.svg
-  0.001s |   0.001s | exported-vector          | vectorlayer            |   signature-ivory.svg
-  0.001s |   0.001s | exported-vector          | vectorlayer            |   Vector Layer 3
-  0.001s |   0.001s | exported-vector          | vectorlayer            |     Parches
-  0.001s |   0.001s | exported-vector          | vectorlayer            |     base
+  0.001s |   0.001s | exported-vector          | vectorlayer            |   logo
   0.001s |   0.001s | skipped-hidden           | vectorlayer            |     Vector Layer 8
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     base
   0.001s |   0.001s | exported-vector          | vectorlayer            |     sponsor pecho
   0.001s |   0.001s | exported-vector          | vectorlayer            |     detalles
+  0.001s |   0.001s | exported-vector          | vectorlayer            |   signature-ivory.svg
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     Parches
+  0.001s |   0.001s | exported-vector          | vectorlayer            |   Vector Layer 3
   0.001s |   0.001s | exported-vector          | vectorlayer            |     Vector Layer 7
-  0.001s |   0.001s | exported-vector          | vectorlayer            |     Vector Layer 9
-  0.001s |   0.001s | exported-vector          | vectorlayer            |     cuello
   0.001s |   0.001s | exported-vector          | vectorlayer            |     nike-borde.svg
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     cuello
+  0.001s |   0.013s | exported-group           | grouplayer             |   logos
+  0.001s |   0.001s | exported-vector          | vectorlayer            |     Vector Layer 9
   0.001s |   0.001s | exported-vector          | vectorlayer            |     Vector Layer 6
-  0.001s |   0.014s | exported-group           | grouplayer             |   logos
-  0.001s |   0.066s | exported-group           | grouplayer             | jersey-front
   0.001s |   0.001s | skipped-hidden           | vectorlayer            |     shadow-vector
-  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 9 (pasted)
+  0.001s |   0.066s | exported-group           | grouplayer             | jersey-front
   0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 6 (pasted)
   0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 3 (pasted)
+  0.001s |   0.001s | skipped-hidden           | paintlayer             | Paint Layer 9 (pasted)
   0.001s |   0.001s | skipped-hidden           | grouplayer             | logos-fuera
